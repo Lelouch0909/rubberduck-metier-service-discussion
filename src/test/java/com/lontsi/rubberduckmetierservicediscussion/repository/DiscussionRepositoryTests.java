@@ -12,16 +12,11 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 
 @SpringBootTest
 @ActiveProfiles("test")
-@TestInstance(TestInstance.Lifecycle.PER_CLASS)
 public class DiscussionRepositoryTests {
 
     @Autowired
     private IDiscussionRepository discussionRepository;
 
-    @BeforeAll
-    public  void init() {
-
-    }
 
     @BeforeEach
     public void setUp() {
@@ -52,8 +47,6 @@ public class DiscussionRepositoryTests {
 
         discussionRepository.deleteAll().block();
     }
-    @AfterAll
-    public void end() {
-    }
+
 
 }

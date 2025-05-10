@@ -1,5 +1,6 @@
 package com.lontsi.rubberduckmetierservicediscussion.service;
 
+import com.lontsi.rubberduckmetierservicediscussion.config.TestConfig;
 import com.lontsi.rubberduckmetierservicediscussion.dto.request.MessageRequestDto;
 import com.lontsi.rubberduckmetierservicediscussion.exception.InvalidOperationException;
 import com.lontsi.rubberduckmetierservicediscussion.models.Message;
@@ -8,14 +9,19 @@ import com.lontsi.rubberduckmetierservicediscussion.models.type.Sender;
 import com.lontsi.rubberduckmetierservicediscussion.repository.IMessageRepository;
 import com.lontsi.rubberduckmetierservicediscussion.service.impl.MessageServiceImpl;
 import dev.langchain4j.data.embedding.Embedding;
-import org.junit.jupiter.api.*;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.DisplayName;
+import org.junit.jupiter.api.Test;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
+import org.mockito.MockitoAnnotations;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.dao.DataAccessException;
 import org.springframework.test.context.ActiveProfiles;
 import reactor.core.publisher.Mono;
 import reactor.test.StepVerifier;
+
 import static com.mongodb.internal.connection.tlschannel.util.Util.assertTrue;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.mockito.ArgumentMatchers.any;
@@ -25,7 +31,6 @@ import static org.mockito.Mockito.when;
 
 @SpringBootTest
 @ActiveProfiles("test")
-@TestInstance(TestInstance.Lifecycle.PER_CLASS)
 public class MessageStoreServiceUnitTest {
 
     @Mock
@@ -37,13 +42,14 @@ public class MessageStoreServiceUnitTest {
     @Mock
     private IVectorStoreService vectorStoreService;
 
-    @InjectMocks
-    private MessageServiceImpl messageService;
+    private IMessageService messageService;
 
     private MessageRequestDto messageRequestDto;
 
     @BeforeEach
     void setUp() {
+        MockitoAnnotations.openMocks(this);
+    messageService = new MessageServiceImpl(messageRepository, embeddingService, vectorStoreService);
         messageRequestDto = new MessageRequestDto("12345", "msg1");
     }
 
@@ -97,7 +103,7 @@ public class MessageStoreServiceUnitTest {
 
         // When
         when(messageRepository.save(any(Message.class))).thenReturn(Mono.just(savedMessage));
-        when(embeddingService.generateEmbedding(content)).thenReturn(embedding);
+        when(embeddingService.generateEmbedding(content)).thenReturn(Mono.just(embedding));
         when(vectorStoreService.storeDocument(any(VectorDocument.class))).thenReturn(Mono.just("vectorId123"));
 
         // Then
@@ -121,10 +127,6 @@ public class MessageStoreServiceUnitTest {
     @AfterEach
     public void tearDown() {
 
-    }
-
-    @AfterAll
-    public void end() {
     }
 
 }

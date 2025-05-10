@@ -1,10 +1,12 @@
 package com.lontsi.rubberduckmetierservicediscussion.repository;
 
+import com.lontsi.rubberduckmetierservicediscussion.config.TestConfig;
 import com.lontsi.rubberduckmetierservicediscussion.models.Message;
 import org.junit.jupiter.api.*;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.context.annotation.Profile;
 import org.springframework.test.context.ActiveProfiles;
 import reactor.test.StepVerifier;
 
@@ -14,16 +16,11 @@ import static org.junit.jupiter.api.Assertions.assertNotNull;
 
 @SpringBootTest
 @ActiveProfiles("test")
-@TestInstance(TestInstance.Lifecycle.PER_CLASS)
 public class MessageRepositoryUnitTest {
 
     @Autowired
     private IMessageRepository messageRepository;
 
-    @BeforeAll
-    public  void init() {
-
-    }
 
     @BeforeEach
     public void setUp() {
@@ -59,8 +56,6 @@ public class MessageRepositoryUnitTest {
 
         messageRepository.deleteAll().block();
     }
-    @AfterAll
-    public void end() {
-    }
+
 
 }

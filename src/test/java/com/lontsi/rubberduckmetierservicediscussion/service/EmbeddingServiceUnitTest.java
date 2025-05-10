@@ -1,42 +1,37 @@
 package com.lontsi.rubberduckmetierservicediscussion.service;
 
+import com.lontsi.rubberduckmetierservicediscussion.config.TestConfig;
+import com.lontsi.rubberduckmetierservicediscussion.exception.ErrorCodes;
 import com.lontsi.rubberduckmetierservicediscussion.exception.InvalidOperationException;
 import com.lontsi.rubberduckmetierservicediscussion.service.impl.EmbeddingServiceImpl;
 import dev.langchain4j.data.embedding.Embedding;
 import dev.langchain4j.model.embedding.onnx.allminilml6v2.AllMiniLmL6V2EmbeddingModel;
 import dev.langchain4j.model.output.Response;
-import org.junit.jupiter.api.*;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.DisplayName;
+import org.junit.jupiter.api.Test;
 import org.mockito.Mock;
-import static org.mockito.Mockito.*;
-import org.mockito.MockitoAnnotations;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.ActiveProfiles;
+import reactor.test.StepVerifier;
 
 import static org.junit.jupiter.api.Assertions.assertArrayEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.mockito.Mockito.when;
 
 @SpringBootTest
 @ActiveProfiles("test")
-@TestInstance(TestInstance.Lifecycle.PER_CLASS)
 public class EmbeddingServiceUnitTest {
 
-    @Autowired
     private IEmbeddingService embeddingService;
 
     @Mock
     private AllMiniLmL6V2EmbeddingModel embeddingModel;
 
 
-    @BeforeAll
-    public void init() {
-
-    }
-
     @BeforeEach
     public void setUp() {
-        MockitoAnnotations.openMocks(this);
-        // inject the mock EmbeddingModel into the constructor
         embeddingService = new EmbeddingServiceImpl(embeddingModel);
     }
 
@@ -52,27 +47,32 @@ public class EmbeddingServiceUnitTest {
         when(embeddingModel.embed(text)).thenReturn(Response.from(expectedEmbedding));
 
         // Then
-        Embedding result = embeddingService.generateEmbedding(text);
-        assertNotNull(result, "Embedding should not be null");
-        assertArrayEquals(expectedEmbedding.vector(), result.vector(), "Embedding should be the same");
+
+        StepVerifier.create(embeddingService.generateEmbedding(text))
+                .assertNext(result -> {
+                    assertNotNull(result, "Embedding should not be null");
+                    assertArrayEquals(expectedEmbedding.vector(), result.vector(), "Embedding should be the same");
+
+                })
+                .verifyComplete();
+
+
     }
 
 
     @Test
     void testGenerateEmbeddingWithEmptyText() {
-
-        Assertions.assertThrows(InvalidOperationException.class, () -> {
-            embeddingService.generateEmbedding("");
-        });
+        StepVerifier.create(embeddingService.generateEmbedding(""))
+                .expectErrorMatches(throwable ->
+                        throwable instanceof InvalidOperationException &&
+                                throwable.getMessage().equals("Text is null") &&
+                                ((InvalidOperationException) throwable).getErrorCode() == ErrorCodes.Embedding_Text_Not_Provided
+                )
+                .verify();
     }
-
-
     @AfterEach
     public void tearDown() {
     }
 
-    @AfterAll
-    public void end() {
-    }
 
 }

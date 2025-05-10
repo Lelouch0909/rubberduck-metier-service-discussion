@@ -9,6 +9,8 @@ import dev.langchain4j.model.embedding.onnx.allminilml6v2.AllMiniLmL6V2Embedding
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.util.StringUtils;
+import reactor.core.publisher.Mono;
+import reactor.core.scheduler.Schedulers;
 
 @Service
 public class EmbeddingServiceImpl implements IEmbeddingService {
@@ -18,11 +20,16 @@ public class EmbeddingServiceImpl implements IEmbeddingService {
     public EmbeddingServiceImpl(AllMiniLmL6V2EmbeddingModel embeddedModel) {
         this.embeddedModel = embeddedModel;
     }
+
+
     @Override
-    public Embedding generateEmbedding(String text) {
-        if (!StringUtils.hasText(text)) {
-            throw new InvalidOperationException("Text is null", ErrorCodes.Embedding_Text_Not_Provided);
-        }
-        return embeddedModel.embed(text).content();
+    public Mono<Embedding> generateEmbedding(String text) {
+        return Mono.fromCallable(()->{
+            if (!StringUtils.hasText(text)) {
+                throw new InvalidOperationException("Text is null", ErrorCodes.Embedding_Text_Not_Provided);
+            }
+            return embeddedModel.embed(text).content();
+        }).subscribeOn(Schedulers.boundedElastic());
+
     }
 }

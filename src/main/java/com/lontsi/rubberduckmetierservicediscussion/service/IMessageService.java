@@ -5,5 +5,7 @@ import org.springframework.stereotype.Service;
 import reactor.core.publisher.Mono;
 
 public interface IMessageService {
-    public Mono<Void> saveMessage(MessageRequestDto messageRequestDto);
+    Mono<Void> saveMessage(MessageRequestDto messageRequestDto);
+
+    Mono<Boolean> isFirstMessage(String idDiscussion);
 }

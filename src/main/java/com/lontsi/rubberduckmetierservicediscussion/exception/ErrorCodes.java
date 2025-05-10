@@ -20,9 +20,12 @@ public enum ErrorCodes {
     DISCUSSION_CREATION_ERROR(5000),
     DISCUSSION_SAVE_ERROR(5050),
 
+    PRODUCER_CREATION_ERROR(9000),
+
     // Invalid Entity Exceptions
     PRINCIPAL_NULL(10000),
     ID_USER_NULL(10500);
+
 
     private final int code;
 

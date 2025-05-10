@@ -18,16 +18,5 @@ public class RubberduckMetierServiceDiscussionApplication {
 
     }
 
-    public static boolean isNarcissistic(int number) {
-        final double[] result = {0};
-        List<Integer> split =  RubberduckMetierServiceDiscussionApplication.decompose(number);
-        split.forEach( i -> result[0] = result[0] + Math.pow(i,split.size()));
-        return number == result[0];
-    }
-
-        public static List<Integer> decompose(int number){
-            return  Arrays.stream(String.valueOf(number).split(""))
-                    .map(Integer::parseInt).toList();
-        }
 
 }

@@ -11,24 +11,25 @@ import com.lontsi.rubberduckmetierservicediscussion.service.IEmbeddingService;
 import com.lontsi.rubberduckmetierservicediscussion.service.IMessageService;
 import com.lontsi.rubberduckmetierservicediscussion.service.IVectorStoreService;
 import dev.langchain4j.data.embedding.Embedding;
+import lombok.RequiredArgsConstructor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.dao.DataAccessException;
-import org.springframework.data.repository.core.RepositoryCreationException;
 import org.springframework.stereotype.Service;
 import reactor.core.publisher.Mono;
 
 @Service
+@RequiredArgsConstructor
 public class MessageServiceImpl implements IMessageService {
 
     private static final Logger log = LoggerFactory.getLogger(MessageServiceImpl.class);
-    @Autowired
-    private IMessageRepository messageRepository;
-    @Autowired
-    private IEmbeddingService embeddingService;
-    @Autowired
-    private IVectorStoreService vectorStoreService;
+
+    private final IMessageRepository messageRepository;
+
+    private final IEmbeddingService embeddingService;
+
+    private final IVectorStoreService vectorStoreService;
 
 
     // save the message in the database
@@ -45,26 +46,39 @@ public class MessageServiceImpl implements IMessageService {
         // save the message in the database
         return messageRepository.save(message)
                 .flatMap(savedMessage -> {
-                    try {
                         // Generate embedding
-                        Embedding embedding = embeddingService.generateEmbedding(message.getContent());
-                        // Save embedding
-                        VectorDocument vectorDocument = toVectorDocument(savedMessage, embedding);
+                    return embeddingService.generateEmbedding(message.getContent())
+                            .flatMap(embedding -> {
+                                // Save embedding
+                                VectorDocument vectorDocument = toVectorDocument(savedMessage, embedding);
 
-                        return vectorStoreService.storeDocument(vectorDocument);
+                                return vectorStoreService.storeDocument(vectorDocument);
+                            });
 
-                    } catch (RuntimeException e) {
-                        log.error("Embedding generation failed", e);
-                        return Mono.error(new InvalidOperationException("Embedding error", e.getCause(), ErrorCodes.EMBEDDING_CREATION_ERROR));
-                    }
 
                 })
-                .onErrorMap(DataAccessException.class, e ->
-                        new InvalidOperationException("Error while saving message", e.getCause(), ErrorCodes.MESSAGE_SAVE_ERROR)
-                )
+                .onErrorResume(e -> {
+                    if (e instanceof DataAccessException) {
+                        return Mono.error(new InvalidOperationException(
+                                "Error while saving message", e.getCause(), ErrorCodes.MESSAGE_SAVE_ERROR
+                        ));
+                    } else if (e instanceof RuntimeException) {
+                        return Mono.error(new InvalidOperationException(
+                                "Embedding error", e.getCause(), ErrorCodes.EMBEDDING_CREATION_ERROR
+                        ));
+                    }
+                    return Mono.error(e); // Autres erreurs non gérées
+                })
                 .then();
 
     }
+
+    @Override
+    public Mono<Boolean> isFirstMessage(String idDiscussion) {
+        return messageRepository.countAllByIdDiscussion(idDiscussion).map(count -> count == 1);
+    }
+
+
 
     // convert to VectorDocument object
     private VectorDocument toVectorDocument(Message message, Embedding embedding) {

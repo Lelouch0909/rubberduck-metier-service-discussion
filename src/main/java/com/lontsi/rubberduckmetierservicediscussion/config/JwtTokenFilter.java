@@ -47,7 +47,7 @@ public class JwtTokenFilter implements WebFilter {
                         .collect(Collectors.toList());
             }
 
-            Authentication authentication = new UsernamePasswordAuthenticationToken(name, credentials, authorities);
+            Authentication authentication = new UsernamePasswordAuthenticationToken(principal, credentials, authorities);
 
             // Associer le contexte de sécurité à la requête
             ServerWebExchange mutatedExchange = exchange.mutate()
