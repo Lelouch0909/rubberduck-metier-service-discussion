@@ -1,15 +1,15 @@
 package com.lontsi.rubberduckmetierservicediscussion.config;
 
-import org.springframework.beans.factory.annotation.Value;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.access.hierarchicalroles.RoleHierarchy;
 import org.springframework.security.access.hierarchicalroles.RoleHierarchyImpl;
 import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
+import org.springframework.security.config.annotation.method.configuration.EnableReactiveMethodSecurity;
 import org.springframework.security.config.annotation.web.reactive.EnableWebFluxSecurity;
+import org.springframework.security.config.web.server.SecurityWebFiltersOrder;
 import org.springframework.security.config.web.server.ServerHttpSecurity;
-import org.springframework.security.oauth2.jwt.JwtDecoder;
-import org.springframework.security.oauth2.jwt.NimbusJwtDecoder;
 import org.springframework.security.web.server.SecurityWebFilterChain;
 import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.reactive.CorsConfigurationSource;
@@ -22,13 +22,14 @@ import java.util.List;
 
 @Configuration
 @EnableWebFluxSecurity
-@EnableMethodSecurity(prePostEnabled = true)
+@EnableReactiveMethodSecurity
 public class AppConfig {
 
 
     @Bean
     public SecurityWebFilterChain securityFilterChain(ServerHttpSecurity http) throws Exception {
         http
+               // .addFilterBefore(jwtTokenFilter(), SecurityWebFiltersOrder.REACTOR_CONTEXT)
                 .csrf(ServerHttpSecurity.CsrfSpec::disable)
                 .cors(cors -> cors.configurationSource(corsConfigurationSource()))
                 .authorizeExchange(
@@ -47,7 +48,6 @@ public class AppConfig {
         return RoleHierarchyImpl.fromHierarchy("ROLE_ADMIN,ROLE_USER");
     }
 
-    @Bean
     public WebFilter jwtTokenFilter() {
         return new JwtTokenFilter();
     }
@@ -59,16 +59,24 @@ public class AppConfig {
             public CorsConfiguration getCorsConfiguration(ServerWebExchange exchange) {
                 CorsConfiguration cfg = new CorsConfiguration();
 
-                cfg.setAllowedOrigins(Arrays.asList("*" ));
-                cfg.setAllowCredentials(true);
-                cfg.setAllowedHeaders(Collections.singletonList("*" ));
-                cfg.setAllowedMethods(Collections.singletonList("*" ));
-                cfg.setExposedHeaders(List.of("Authorization" ));
+                cfg.setAllowedOriginPatterns(List.of("*"));
+                cfg.setAllowCredentials(false); 
+
+                cfg.setAllowedHeaders(Collections.singletonList("*"));
+                cfg.setAllowedMethods(Collections.singletonList("*"));
+                cfg.setExposedHeaders(Arrays.asList("Authorization"));
                 cfg.setMaxAge(3600L);
                 return cfg;
             }
 
+
         };
+    }
+
+
+    @Bean
+    public ObjectMapper objectMapper() {
+        return new ObjectMapper();
     }
 }
 

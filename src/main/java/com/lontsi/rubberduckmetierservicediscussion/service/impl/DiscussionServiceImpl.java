@@ -8,12 +8,14 @@ import com.lontsi.rubberduckmetierservicediscussion.exception.InvalidOperationEx
 import com.lontsi.rubberduckmetierservicediscussion.models.Discussion;
 import com.lontsi.rubberduckmetierservicediscussion.repository.IDiscussionRepository;
 import com.lontsi.rubberduckmetierservicediscussion.service.IDiscussionService;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
+@Slf4j
 @Service
 public class DiscussionServiceImpl implements IDiscussionService {
 
@@ -49,6 +51,10 @@ public class DiscussionServiceImpl implements IDiscussionService {
         if (idUser == null || idUser.isEmpty()) {
             throw new InvalidEntityException("idUser null ou vide", ErrorCodes.ID_USER_NULL);
         }
-        return discussionRepository.findAllByIdUser(idUser).map(DiscussionDto::fromEntity);
+        log.warn("---------------idUser---------: {}", idUser);
+        Flux<Discussion> discussions = discussionRepository.findAllByIdUser(idUser)
+                .doOnNext(discussion -> log.warn("Discussion trouvée : {}", discussion));
+
+        return discussions.map(DiscussionDto::fromEntity);
     }
 }

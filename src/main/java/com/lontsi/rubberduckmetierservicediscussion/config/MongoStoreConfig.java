@@ -15,7 +15,7 @@ import java.time.OffsetDateTime;
 import java.util.Optional;
 
 @Configuration
-@Profile("!test")
+//@Profile("!test")
 
 @EnableMongoRepositories("com.lontsi.rubberduckmetierservicediscussion.repository")
 public class MongoStoreConfig {

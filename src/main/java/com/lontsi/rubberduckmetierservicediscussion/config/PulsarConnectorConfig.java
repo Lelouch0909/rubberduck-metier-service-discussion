@@ -20,7 +20,7 @@ import org.springframework.pulsar.reactive.core.*;
 import java.util.List;
 
 @Configuration
-@Profile("!test")
+//@Profile("!test")
 @RequiredArgsConstructor
 public class PulsarConnectorConfig {
 

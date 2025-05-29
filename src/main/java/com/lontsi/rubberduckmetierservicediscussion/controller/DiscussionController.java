@@ -31,7 +31,7 @@ public class DiscussionController implements IDiscussionApi {
         return ReactiveSecurityContextHolder.getContext().flatMap(
                 SecurityContext -> {
 
-                    String principal = SecurityContext.getAuthentication().getPrincipal().toString();
+                    String principal = SecurityContext.getAuthentication().getName().toString();
                     log.warn("Auth header detected: principal={}", principal);
 
                     if (principal == null) {
@@ -50,7 +50,7 @@ public class DiscussionController implements IDiscussionApi {
         return ReactiveSecurityContextHolder.getContext().flatMapMany(
                 SecurityContext -> {
 
-                    String principal = SecurityContext.getAuthentication().getPrincipal().toString();
+                    String principal = SecurityContext.getAuthentication().getName().toString();
 
                     if (principal == null) {
                         // Pas d'auth info, on continue sans auth

@@ -3,6 +3,7 @@ package com.lontsi.rubberduckmetierservicediscussion.dto;
 import com.lontsi.rubberduckmetierservicediscussion.models.Discussion;
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Builder;
+import lombok.Data;
 
 import java.time.Instant;
 import java.time.OffsetDateTime;
@@ -15,6 +16,7 @@ import java.time.OffsetDateTime;
                 "  \"modificationDate\": \"2023-05-04T10:00:00.000Z\"\n" +
                 "}")
 @Builder
+@Data
 public class DiscussionDto {
 
     private String idDiscussion;

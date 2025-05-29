@@ -17,26 +17,18 @@ import org.springframework.stereotype.Service;
 @Slf4j
 public class MessageConsumerServiceImpl implements IMessageConsumerService {
 
-    private final SimpMessagingTemplate messagingTemplate;
+  //  private final SimpMessagingTemplate messagingTemplate;
 
 
     @Override
     public  void processMessage(MessageProducerDto message) {
-        if (StringUtils.isBlank(message.principal())) {
-            log.warn("Invalid principal in message");
-            return;
-        }
 
-        messagingTemplate.convertAndSendToUser(
-                message.principal(),
-                "/topic/discussion." + message.id_discussion(),
-                new MessageResponseDto(message.id_discussion(), message.content())
-        );
+
     }
 
 
     private void sendToTopic(String topic, MessageResponseDto responseDto, String principal) {
-        messagingTemplate.convertAndSendToUser(principal, topic, responseDto);
+    //    messagingTemplate.convertAndSendToUser(principal, topic, responseDto);
     }
 
 

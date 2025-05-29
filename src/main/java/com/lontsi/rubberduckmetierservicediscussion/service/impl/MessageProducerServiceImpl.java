@@ -26,7 +26,11 @@ public class MessageProducerServiceImpl implements IMessageProducerService {
 
     @Override
     public Mono<Void> sendMessage(MessageProducerDto message) {
-        return  reactivePulsarTemplate.send(TOPIC, message).timeout(TIMEOUT)
+        return reactivePulsarTemplate
+                .newMessage(message)
+                .withTopic(TOPIC)
+                .withMessageCustomizer(messageBuilder -> messageBuilder.key(message.id_discussion()))
+                .send().timeout(TIMEOUT)
                         .retryWhen(Retry.backoff(MAX_RETRIES, INITIAL_BACKOFF))
                         .doOnSuccess(unused -> log.debug("Successfully sent message: {}", message))
                         .doOnError(err -> log.error("Failed to send message: {}", message, err))

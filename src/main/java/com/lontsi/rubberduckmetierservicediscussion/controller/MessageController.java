@@ -1,5 +1,6 @@
 package com.lontsi.rubberduckmetierservicediscussion.controller;
 
+import com.lontsi.rubberduckmetierservicediscussion.config.SseDispatcher;
 import com.lontsi.rubberduckmetierservicediscussion.controller.api.IMessageApi;
 import com.lontsi.rubberduckmetierservicediscussion.dto.MessageProducerDto;
 import com.lontsi.rubberduckmetierservicediscussion.dto.request.MessageRequestDto;
@@ -9,43 +10,47 @@ import com.lontsi.rubberduckmetierservicediscussion.service.IProcessServiceMessa
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.pulsar.client.api.Message;
-import org.apache.pulsar.common.schema.SchemaType;
 import org.apache.pulsar.reactive.client.api.MessageResult;
-import org.springframework.messaging.simp.SimpMessageHeaderAccessor;
-import org.springframework.pulsar.reactive.config.annotation.ReactivePulsarListener;
-import org.springframework.stereotype.Controller;
+import org.springframework.http.codec.ServerSentEvent;
+import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.reactive.socket.WebSocketSession;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
-import java.util.Objects;
+import java.util.concurrent.ConcurrentMap;
 
-@Controller
+import static com.lontsi.rubberduckmetierservicediscussion.config.Utils.MESSAGE_ENDPOINT;
+
+@RestController(MESSAGE_ENDPOINT)
 @RequiredArgsConstructor
 @Slf4j
 public class MessageController implements IMessageApi {
 
     private final IProcessServiceMessage processServiceMessage;
     private final IMessageConsumerService consumerService;
+    private final SseDispatcher sseDispatcher;
+    private final ConcurrentMap<String, WebSocketSession> sessionMap;
+
 
     @Override
-    public Mono<Void> handleMessage(MessageRequestDto messageRequestDto, SimpMessageHeaderAccessor headerAccessor) {
+    public Mono<Void> handleMessage(MessageRequestDto messageRequestDto) {
 
+        log.warn("receive message :{}", messageRequestDto);
         return processServiceMessage
                 .processMessage(messageRequestDto,
-                        Objects.requireNonNull(headerAccessor.getSessionAttributes())
-                                .get("X-User-Principal")
-                                .toString())
+                        SecurityContextHolder.getContext().getAuthentication().getName()
+                )
                 .onErrorMap(NullPointerException.class, ex -> new InvalidOperationException("Pas de principal ", ex.getCause()));
-
 
     }
 
-    @ReactivePulsarListener(subscriptionName = "consumer-discussion",
-            topics = "discussions-responses",
-            stream = true,
-            schemaType = SchemaType.JSON
+    @Override
+    public Flux<ServerSentEvent<String>> subscribeToDiscussion(String idDiscussion) {
+        return sseDispatcher.subscribe(idDiscussion);
+    }
 
-    )
+
     @Override
     public Flux<MessageResult<Void>> produceMessage(Flux<Message<MessageProducerDto>> messages) {
         return messages
@@ -55,9 +60,17 @@ public class MessageController implements IMessageApi {
                         MessageProducerDto messageProducerDto = message.getValue();
 
                         if (messageProducerDto != null) {
-                            consumerService.processMessage(messageProducerDto);
+                            WebSocketSession session = sessionMap.get(messageProducerDto.id_discussion());
 
-                            // ack
+                            if (session != null && session.isOpen()) {
+
+                                return session.send(Mono.just(session.textMessage(messageProducerDto.content())))
+                                        .thenReturn(MessageResult.acknowledge(message));
+
+
+                            } else {
+                                log.warn("❌ No session found for idDiscussion: {}", (messageProducerDto.id_discussion()));
+                            }                            // ack
                             log.info("📥 transfered message: {}", messageProducerDto);
 
                         }
