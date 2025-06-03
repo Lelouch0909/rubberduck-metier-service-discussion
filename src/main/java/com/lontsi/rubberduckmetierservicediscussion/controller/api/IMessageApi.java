@@ -40,27 +40,7 @@ public interface IMessageApi {
     public Mono<Void> handleMessage(@RequestBody MessageRequestDto messageRequestDto);
 
 
-    /**
-     * Subscribes to a discussion to receive real-time messages.
-     * This method returns a Flux of ServerSentEvent that emits messages for the specified discussion.
-     *
-     * @param idDiscussion The ID of the discussion to subscribe to.
-     * @return A Flux of ServerSentEvent containing messages for the discussion.
-     */
-    @Operation(summary = "abonnement au canal de reception des messages de la discussion", description = "" +
-            "cette méthode permet de s'abonner à une discussion spécifique pour recevoir des messages en temps réel via Server-Sent Events (SSE). " +
-                    "Les messages sont envoyés au client sous forme d'événements SSE, permettant une communication unidirectionnelle efficace depuis le serveur vers le client.")
-    @ApiResponse(
-           responseCode = "200",
-            description = "Flux de messages pour la discussion",
-            content = @Content(
-                    mediaType = MediaType.TEXT_EVENT_STREAM_VALUE
-            )
 
-    )
-    @ResponseStatus(HttpStatus.OK)
-    @GetMapping(path= MESSAGE_ENDPOINT + "/subscribe/{idDiscussion}", produces = "text/event-stream")
-    public Flux<ServerSentEvent<String>> subscribeToDiscussion(@PathVariable String idDiscussion);
 
     /**
      * Consumes messages from the Pulsar topic 'discussions-responses'.

@@ -1,6 +1,5 @@
 package com.lontsi.rubberduckmetierservicediscussion.controller;
 
-import com.lontsi.rubberduckmetierservicediscussion.config.SseDispatcher;
 import com.lontsi.rubberduckmetierservicediscussion.controller.api.IMessageApi;
 import com.lontsi.rubberduckmetierservicediscussion.dto.MessageProducerDto;
 import com.lontsi.rubberduckmetierservicediscussion.dto.request.MessageRequestDto;
@@ -28,8 +27,6 @@ import static com.lontsi.rubberduckmetierservicediscussion.config.Utils.MESSAGE_
 public class MessageController implements IMessageApi {
 
     private final IProcessServiceMessage processServiceMessage;
-    private final IMessageConsumerService consumerService;
-    private final SseDispatcher sseDispatcher;
     private final ConcurrentMap<String, WebSocketSession> sessionMap;
 
 
@@ -45,10 +42,6 @@ public class MessageController implements IMessageApi {
 
     }
 
-    @Override
-    public Flux<ServerSentEvent<String>> subscribeToDiscussion(String idDiscussion) {
-        return sseDispatcher.subscribe(idDiscussion);
-    }
 
 
     @Override

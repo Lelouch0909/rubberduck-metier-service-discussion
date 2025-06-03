@@ -50,42 +50,4 @@ public class WebSocketConfig {
     public Sinks.Many<String> sink(){
         return Sinks.many().multicast().directBestEffort();
     }
-/*
- @Override
-    public void registerStompEndpoints(StompEndpointRegistry registry) {
-        ws:
-        registry.addEndpoint("/ws/chat")   // url d entre a la connexion websocket
-                .setAllowedOrigins("*") // domaine autorisé à se connecter
-         .withSockJS();
-        ;
-    }
-
-    @Bean
-    public HandshakeInterceptor httpSessionHandshakeInterceptor() {
-        return new HandshakeInterceptor() {
-
-            @Override
-            public boolean beforeHandshake(ServerHttpRequest request, ServerHttpResponse response, WebSocketHandler wsHandler, Map<String, Object> attributes) throws Exception {
-                String principal = request.getHeaders().getFirst("X-User-Principal");
-                if (principal != null) {
-                    attributes.put("PRINCIPAL", principal);
-                }
-                return true;
-            }
-
-            @Override
-            public void afterHandshake(ServerHttpRequest request, ServerHttpResponse response, WebSocketHandler wsHandler, Exception exception) {
-
-            }
-        };
-    }
-
-    @Override
-    public void configureMessageBroker(MessageBrokerRegistry registry) {
-        registry.enableSimpleBroker("/topic","/queue");  // configuration du bus de message ( la diffusion des messages se
-                                                // fera aux clients abonnes a des destinations commencant par /topic & /queue )
-
-        registry.setApplicationDestinationPrefixes("/app");  // prefix des destinations des messages pour les messages de l application
-        registry.setUserDestinationPrefix("/user");  // prefix des destinations des messages pour les messages de l utilisateur
-    } */
 }
