@@ -5,6 +5,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.lontsi.rubberduckmetierservicediscussion.dto.MessageProducerDto;
 import com.lontsi.rubberduckmetierservicediscussion.service.IMessageProducerService;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 import org.springframework.web.reactive.socket.WebSocketHandler;
 import org.springframework.web.reactive.socket.WebSocketSession;
@@ -18,6 +19,7 @@ import java.util.concurrent.ConcurrentMap;
  * WebsocketHandler interface qui dis comment gerer les connexions websocket
  * */
 
+@Slf4j
 @Component
 @RequiredArgsConstructor
 public class CustomWebSocketHandler implements WebSocketHandler {
@@ -26,21 +28,28 @@ public class CustomWebSocketHandler implements WebSocketHandler {
     private final ConcurrentMap<String, WebSocketSession> sessionMap;
     private final ObjectMapper objectMapper;
 
-
     @Override
     public Mono<Void> handle(WebSocketSession session) {
         return session.receive()
                 .flatMap(message -> {
-                    String payload = message.getPayloadAsText();
-                    MessageProducerDto dto = parseMessage(payload);
-                    System.out.println("Received message: " + payload + " from session: " + dto.id_discussion());
-                    // Store the session in the map
-                    sessionMap.put(dto.id_discussion(), session);
-                    // Send the message to the producer service
-                    messageProducerService.sendMessage(dto);
-                    return Mono.empty();
+                    try {
+                        String payload = message.getPayloadAsText();
+                        MessageProducerDto dto = parseMessage(payload);
+                        System.out.println("Received message: " + payload + " from session: " + dto.id_discussion());
+                        sessionMap.put(dto.id_discussion(), session);
+                        return messageProducerService.sendMessage(dto);
+                    } catch (Exception e) {
+                        log.error("Error while sending message", e);
+                        return Mono.empty();
+                    }
                 })
-                .then();
+                .onErrorResume(e -> {
+                    log.error(e.getMessage());
+                    return session.send(
+                            Mono.just(session.textMessage(e.getMessage()))
+                    );
+                })
+                .then(Mono.never());
     }
 
     /*
@@ -50,6 +59,7 @@ public class CustomWebSocketHandler implements WebSocketHandler {
         try {
             return objectMapper.readValue(payload, MessageProducerDto.class);
         } catch (JsonProcessingException e) {
+            log.error(e.getMessage());
             throw new RuntimeException("Invalid message format", e);
         }
     }

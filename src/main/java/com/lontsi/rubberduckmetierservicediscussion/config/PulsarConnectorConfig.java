@@ -4,6 +4,7 @@ import com.lontsi.rubberduckmetierservicediscussion.dto.MessageProducerDto;
 import com.lontsi.rubberduckmetierservicediscussion.dto.request.MessageRequestDto;
 import com.lontsi.rubberduckmetierservicediscussion.dto.response.MessageResponseDto;
 import lombok.RequiredArgsConstructor;
+import org.apache.pulsar.client.admin.PulsarAdmin;
 import org.apache.pulsar.client.api.*;
 import org.apache.pulsar.reactive.client.adapter.AdaptedReactivePulsarClientFactory;
 import org.apache.pulsar.reactive.client.api.ReactiveMessageConsumer;
