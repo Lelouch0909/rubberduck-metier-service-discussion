@@ -4,13 +4,11 @@ import com.lontsi.rubberduckmetierservicediscussion.controller.api.IMessageApi;
 import com.lontsi.rubberduckmetierservicediscussion.dto.MessageProducerDto;
 import com.lontsi.rubberduckmetierservicediscussion.dto.request.MessageRequestDto;
 import com.lontsi.rubberduckmetierservicediscussion.exception.InvalidOperationException;
-import com.lontsi.rubberduckmetierservicediscussion.service.IMessageConsumerService;
 import com.lontsi.rubberduckmetierservicediscussion.service.IProcessServiceMessage;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.pulsar.client.api.Message;
 import org.apache.pulsar.reactive.client.api.MessageResult;
-import org.springframework.http.codec.ServerSentEvent;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.reactive.socket.WebSocketSession;
@@ -28,19 +26,6 @@ public class MessageController implements IMessageApi {
 
     private final IProcessServiceMessage processServiceMessage;
     private final ConcurrentMap<String, WebSocketSession> sessionMap;
-
-
-    @Override
-    public Mono<Void> handleMessage(MessageRequestDto messageRequestDto) {
-
-        log.warn("receive message :{}", messageRequestDto);
-        return processServiceMessage
-                .processMessage(messageRequestDto,
-                        SecurityContextHolder.getContext().getAuthentication().getName()
-                )
-                .onErrorMap(NullPointerException.class, ex -> new InvalidOperationException("Pas de principal ", ex.getCause()));
-
-    }
 
 
 

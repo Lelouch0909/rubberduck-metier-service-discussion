@@ -27,10 +27,7 @@ public class JwtTokenFilter implements WebFilter {
     public Mono<Void> filter(ServerWebExchange exchange, WebFilterChain chain) {
         String path = exchange.getRequest().getPath().value();
 
-        // Ignorer les endpoints WebSocket/SockJS
-        if (path.startsWith("/ws/") || path.startsWith("/chat/")) {
-            return chain.filter(exchange);
-        }
+
         // Récupérer le token à partir de l'en-tête Authorization
         ServerHttpRequest request = exchange.getRequest();
         try {

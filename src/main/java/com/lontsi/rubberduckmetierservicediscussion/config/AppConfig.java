@@ -29,7 +29,7 @@ public class AppConfig {
     @Bean
     public SecurityWebFilterChain securityFilterChain(ServerHttpSecurity http) throws Exception {
         http
-               // .addFilterBefore(jwtTokenFilter(), SecurityWebFiltersOrder.REACTOR_CONTEXT)
+                .addFilterBefore(jwtTokenFilter(), SecurityWebFiltersOrder.REACTOR_CONTEXT)
                 .csrf(ServerHttpSecurity.CsrfSpec::disable)
                 .cors(cors -> cors.configurationSource(corsConfigurationSource()))
                 .authorizeExchange(

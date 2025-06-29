@@ -16,30 +16,16 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.codec.ServerSentEvent;
 import org.springframework.pulsar.reactive.config.annotation.ReactivePulsarListener;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
 import static com.lontsi.rubberduckmetierservicediscussion.config.Utils.MESSAGE_ENDPOINT;
 
+
+
 public interface IMessageApi {
-
-    /**
-     * Handles incoming messages from the client.
-     * This method processes the message request and sends it to the appropriate service.
-     *
-     * @param messageRequestDto The message request data transfer object containing the message details.
-     * @return A Mono that completes when the message is processed.
-     */
-    @Operation(
-            summary = "Handle incoming message",
-            description = "This method handles WebSocket messages sent by the client."
-    )
-    @PostMapping(MESSAGE_ENDPOINT + "/send")
-    @ResponseStatus(HttpStatus.ACCEPTED)
-    public Mono<Void> handleMessage(@RequestBody MessageRequestDto messageRequestDto);
-
-
 
 
     /**

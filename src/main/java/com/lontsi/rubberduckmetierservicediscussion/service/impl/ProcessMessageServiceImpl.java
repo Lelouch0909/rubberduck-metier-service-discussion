@@ -19,20 +19,20 @@ public class ProcessMessageServiceImpl implements IProcessServiceMessage {
     private final IMessageProducerService messageProducerService;
 
     @Override
-    public Mono<Void> processMessage(MessageRequestDto requestDto, String principal) {
-        return messageService.saveMessage(requestDto)
+    public Mono<Void> processMessage(MessageProducerDto requestDto) {
+        return messageService.saveMessage(new MessageRequestDto(requestDto.id_discussion(), requestDto.content(), requestDto.model()))
                 .then(messageService.isFirstMessage(requestDto.id_discussion()).flatMap((isfirst) -> {
                     if (!isfirst) {
                         return messageRetrievalService
                                 .enrichPromptWithContext(requestDto.content(), requestDto.id_discussion())
                                 .flatMap(enrichedPrompt ->
                                         messageProducerService.sendMessage(
-                                                new MessageProducerDto(principal, enrichedPrompt, requestDto.id_discussion())
+                                                new MessageProducerDto(requestDto.principal(), enrichedPrompt, requestDto.id_discussion(), requestDto.model())
                                         )
                                 );
                     } else {
                         return messageProducerService
-                                .sendMessage(new MessageProducerDto(principal, requestDto.id_discussion(), requestDto.content()));
+                                .sendMessage(new MessageProducerDto(requestDto.principal(), requestDto.id_discussion(), requestDto.content(), requestDto.model()));
                     }
                 })).then();
 
