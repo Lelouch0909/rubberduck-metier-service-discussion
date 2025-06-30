@@ -5,8 +5,6 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.lontsi.rubberduckmetierservicediscussion.dto.MessageProducerDto;
 import com.lontsi.rubberduckmetierservicediscussion.dto.ModelsDto;
 import com.lontsi.rubberduckmetierservicediscussion.dto.request.MessageRequestDto;
-import com.lontsi.rubberduckmetierservicediscussion.exception.ErrorCodes;
-import com.lontsi.rubberduckmetierservicediscussion.exception.InvalidOperationException;
 import com.lontsi.rubberduckmetierservicediscussion.service.IProcessServiceMessage;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;

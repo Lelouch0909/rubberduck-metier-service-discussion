@@ -50,6 +50,7 @@ public interface IDiscussionApi {
 
     )
     @ResponseStatus(HttpStatus.FOUND)
+    @PreAuthorize("hasRole('USER')")
     Flux<DiscussionDto> findAllUserDiscussion();
 
 }

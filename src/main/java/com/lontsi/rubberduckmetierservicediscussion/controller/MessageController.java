@@ -2,14 +2,11 @@ package com.lontsi.rubberduckmetierservicediscussion.controller;
 
 import com.lontsi.rubberduckmetierservicediscussion.controller.api.IMessageApi;
 import com.lontsi.rubberduckmetierservicediscussion.dto.MessageProducerDto;
-import com.lontsi.rubberduckmetierservicediscussion.dto.request.MessageRequestDto;
-import com.lontsi.rubberduckmetierservicediscussion.exception.InvalidOperationException;
 import com.lontsi.rubberduckmetierservicediscussion.service.IProcessServiceMessage;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.pulsar.client.api.Message;
 import org.apache.pulsar.reactive.client.api.MessageResult;
-import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.reactive.socket.WebSocketSession;
 import reactor.core.publisher.Flux;
