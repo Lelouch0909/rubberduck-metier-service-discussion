@@ -1,28 +1,14 @@
 package com.lontsi.rubberduckmetierservicediscussion.controller.api;
 
+import com.lontsi.rubberduckmetierservicediscussion.dto.MessageConsumerDto;
 import com.lontsi.rubberduckmetierservicediscussion.dto.MessageProducerDto;
-import com.lontsi.rubberduckmetierservicediscussion.dto.request.MessageRequestDto;
-
-import com.lontsi.rubberduckmetierservicediscussion.dto.response.MessageResponseDto;
 import io.swagger.v3.oas.annotations.Operation;
-import io.swagger.v3.oas.annotations.media.Content;
-import io.swagger.v3.oas.annotations.media.Schema;
-import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import org.apache.pulsar.client.api.Message;
 import org.apache.pulsar.client.api.SubscriptionType;
 import org.apache.pulsar.common.schema.SchemaType;
 import org.apache.pulsar.reactive.client.api.MessageResult;
-import org.springframework.http.HttpStatus;
-import org.springframework.http.MediaType;
-import org.springframework.http.codec.ServerSentEvent;
 import org.springframework.pulsar.reactive.config.annotation.ReactivePulsarListener;
-import org.springframework.security.access.prepost.PreAuthorize;
-import org.springframework.web.bind.annotation.*;
 import reactor.core.publisher.Flux;
-import reactor.core.publisher.Mono;
-
-import static com.lontsi.rubberduckmetierservicediscussion.config.Utils.MESSAGE_ENDPOINT;
-
 
 
 public interface IMessageApi {
@@ -50,5 +36,5 @@ public interface IMessageApi {
 
 
     )
-    Flux<MessageResult<Void>> produceMessage(Flux<Message<MessageProducerDto>> messages);
+    Flux<MessageResult<Void>> produceMessage(Flux<Message<MessageConsumerDto>> messages);
 }

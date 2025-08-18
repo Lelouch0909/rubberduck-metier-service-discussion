@@ -1,6 +1,7 @@
 package com.lontsi.rubberduckmetierservicediscussion.controller;
 
 import com.lontsi.rubberduckmetierservicediscussion.controller.api.IMessageApi;
+import com.lontsi.rubberduckmetierservicediscussion.dto.MessageConsumerDto;
 import com.lontsi.rubberduckmetierservicediscussion.dto.MessageProducerDto;
 import com.lontsi.rubberduckmetierservicediscussion.service.IProcessServiceMessage;
 import lombok.RequiredArgsConstructor;
@@ -21,32 +22,30 @@ import static com.lontsi.rubberduckmetierservicediscussion.config.Utils.MESSAGE_
 @Slf4j
 public class MessageController implements IMessageApi {
 
-    private final IProcessServiceMessage processServiceMessage;
     private final ConcurrentMap<String, WebSocketSession> sessionMap;
 
 
-
     @Override
-    public Flux<MessageResult<Void>> produceMessage(Flux<Message<MessageProducerDto>> messages) {
+    public Flux<MessageResult<Void>> produceMessage(Flux<Message<MessageConsumerDto>> messages) {
         return messages
                 .flatMap((message ->
                 {
                     try {
-                        MessageProducerDto messageProducerDto = message.getValue();
+                        MessageConsumerDto messageConsumerDto = message.getValue();
 
-                        if (messageProducerDto != null) {
-                            WebSocketSession session = sessionMap.get(messageProducerDto.id_discussion());
+                        if (messageConsumerDto != null) {
+                            WebSocketSession session = sessionMap.get(messageConsumerDto.id_discussion());
 
                             if (session != null && session.isOpen()) {
 
-                                return session.send(Mono.just(session.textMessage(messageProducerDto.content())))
+                                return session.send(Mono.just(session.textMessage(messageConsumerDto.content())))
                                         .thenReturn(MessageResult.acknowledge(message));
 
 
                             } else {
-                                log.warn("❌ No session found for idDiscussion: {}", (messageProducerDto.id_discussion()));
+                                log.warn("❌ No session found for idDiscussion: {}", (messageConsumerDto.id_discussion()));
                             }                            // ack
-                            log.info("📥 transfered message: {}", messageProducerDto);
+                            log.info("📥 transfered message: {}", messageConsumerDto);
 
                         }
 

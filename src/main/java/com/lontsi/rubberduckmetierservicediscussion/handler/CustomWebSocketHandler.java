@@ -2,6 +2,7 @@ package com.lontsi.rubberduckmetierservicediscussion.handler;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.lontsi.rubberduckmetierservicediscussion.dto.AssistantTier;
 import com.lontsi.rubberduckmetierservicediscussion.dto.MessageProducerDto;
 import com.lontsi.rubberduckmetierservicediscussion.dto.ModelsDto;
 import com.lontsi.rubberduckmetierservicediscussion.dto.request.MessageRequestDto;
@@ -46,6 +47,7 @@ public class CustomWebSocketHandler implements WebSocketHandler {
 
                     // Vérifie si l'utilisateur a le rôle PREMIUM pour l'accès aux modèles payants
                     boolean isPremiumUser = hasRole(authentication, "ROLE_PREMIUM");
+                    boolean isProfessionalUser = hasRole(authentication, "ROLE_PROFESSIONAL");
 
                     // Gère la réception des messages WebSocket
                     return session.receive()
@@ -57,20 +59,26 @@ public class CustomWebSocketHandler implements WebSocketHandler {
 
                                     // Vérifie si le modèle demandé est gratuit ou premium
                                     boolean isFreeModels = ModelsDto.freeModel.contains(dto.model());
-                                    if (!isFreeModels && !isPremiumUser) {
+                                    if (!isFreeModels && !isPremiumUser && !isProfessionalUser) {
                                         log.warn("Accès refusé au modèle premium {} pour {}", dto.model(), authentication.getName());
                                         // Envoie une erreur au client et ferme la connexion
                                         return session.send(
-                                                Mono.just(session.textMessage("Ce modèle est réservé aux utilisateurs premium"))
+                                                Mono.just(session.textMessage("Ce modèle est réservé aux utilisateurs premium et professionels"))
                                         );
                                     }
 
                                     // Associe la session au channel (discussion)
                                     sessionMap.put(dto.id_discussion(), session);
-
+                                    AssistantTier tier = AssistantTier.STANDARD;
+                                    if (isPremiumUser) {
+                                        tier = AssistantTier.PREMIUM;
+                                    }
+                                    if (isPremiumUser) {
+                                        tier = AssistantTier.PROFESSIONAL;
+                                    }
                                     // Traite le message via le service, en passant le principal
                                     return processServiceMessage.processMessage(
-                                            new MessageProducerDto(authentication.getName(), dto.id_discussion(), dto.content(), dto.model())
+                                            new MessageProducerDto(authentication.getName(), dto.id_discussion(), dto.content(), dto.model(), tier, dto.mode())
                                     );
                                 } catch (Exception e) {
                                     log.error("Error while sending message", e);
@@ -97,6 +105,7 @@ public class CustomWebSocketHandler implements WebSocketHandler {
      */
     private boolean hasRole(Authentication authentication, String role) {
         for (GrantedAuthority authority : authentication.getAuthorities()) {
+            log.warn("Authorities : " +authority);
             if (authority.getAuthority().equals(role)) {
                 return true;
             }

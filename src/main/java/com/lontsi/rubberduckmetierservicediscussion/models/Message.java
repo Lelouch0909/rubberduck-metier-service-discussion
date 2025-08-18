@@ -1,7 +1,10 @@
 package com.lontsi.rubberduckmetierservicediscussion.models;
 
 import com.lontsi.rubberduckmetierservicediscussion.models.type.Sender;
-import lombok.*;
+import lombok.AllArgsConstructor;
+import lombok.Data;
+import lombok.EqualsAndHashCode;
+import lombok.NoArgsConstructor;
 import org.springframework.data.mongodb.core.mapping.Document;
 import org.springframework.data.mongodb.core.mapping.Field;
 

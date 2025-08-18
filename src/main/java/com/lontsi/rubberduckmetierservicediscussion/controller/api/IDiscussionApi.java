@@ -15,8 +15,6 @@ import org.springframework.web.bind.annotation.ResponseStatus;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
-import java.util.List;
-
 import static com.lontsi.rubberduckmetierservicediscussion.config.Utils.DISCUSSION_ENDPOINT;
 
 @Schema(name = "Discussion-Api", description = "API de gestion des discussions ")
@@ -31,7 +29,7 @@ public interface IDiscussionApi {
             description = "Discussion créée",
             content = @Content(
                     mediaType = "text/plain",
-                    schema = @Schema(type = "string",example = "01102465416554")
+                    schema = @Schema(type = "string", example = "01102465416554")
             )
 
     )
@@ -40,7 +38,7 @@ public interface IDiscussionApi {
 
     @GetMapping(DISCUSSION_ENDPOINT + "/findAllUserDiscussion")
     @Operation(summary = "Rechercher toutes les discussions d'un utilisateur", description = "retourne la liste des discussions")
-            @ApiResponse(
+    @ApiResponse(
             responseCode = "302",
             description = "Discussions trouvées",
             content = @Content(

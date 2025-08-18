@@ -26,12 +26,12 @@ public class MessageRetrievalServiceImpl implements IMessageRetrievalService {
             return vectorStoreService.findRelevant(embedding, 5, idDiscussion).flatMap(similarMessage -> {
                 // 3. retourner le prompt enrichis
                 String result = """
-                Prev Context :
-                %s
-
-                User Message :
-                %s
-                """.formatted(similarMessage, prompt);
+                        Prev Context :
+                        %s
+                        
+                        User Message :
+                        %s
+                        """.formatted(similarMessage, prompt);
                 return Mono.just(result);
             });
         });

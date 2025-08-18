@@ -1,10 +1,13 @@
 package com.lontsi.rubberduckmetierservicediscussion.service;
 
 import com.lontsi.rubberduckmetierservicediscussion.config.TestConfig;
+import com.lontsi.rubberduckmetierservicediscussion.dto.AssistanceMode;
+import com.lontsi.rubberduckmetierservicediscussion.dto.AssistantTier;
 import com.lontsi.rubberduckmetierservicediscussion.dto.request.MessageRequestDto;
 import com.lontsi.rubberduckmetierservicediscussion.exception.InvalidOperationException;
 import com.lontsi.rubberduckmetierservicediscussion.models.Message;
 import com.lontsi.rubberduckmetierservicediscussion.models.VectorDocument;
+import com.lontsi.rubberduckmetierservicediscussion.models.type.Model;
 import com.lontsi.rubberduckmetierservicediscussion.models.type.Sender;
 import com.lontsi.rubberduckmetierservicediscussion.repository.IMessageRepository;
 import com.lontsi.rubberduckmetierservicediscussion.service.impl.MessageServiceImpl;
@@ -50,7 +53,7 @@ public class MessageStoreServiceUnitTest {
     void setUp() {
         MockitoAnnotations.openMocks(this);
     messageService = new MessageServiceImpl(messageRepository, embeddingService, vectorStoreService);
-        messageRequestDto = new MessageRequestDto("12345", "msg1");
+        messageRequestDto = new MessageRequestDto("12345", "msg1", Model.QUACK_1o, AssistanceMode.EXPLICATIF);
     }
 
     @Test
@@ -91,7 +94,7 @@ public class MessageStoreServiceUnitTest {
         String content = "Hello world!";
         String idDiscussion = "12345";
 
-        MessageRequestDto dto = new MessageRequestDto(idDiscussion, content);
+        MessageRequestDto dto = new MessageRequestDto(idDiscussion, content,Model.QUACK_2, AssistanceMode.EXPLICATIF);
 
         Message savedMessage = new Message();
         savedMessage.setId("msg1");

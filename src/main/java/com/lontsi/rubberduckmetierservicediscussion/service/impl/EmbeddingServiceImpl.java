@@ -24,7 +24,7 @@ public class EmbeddingServiceImpl implements IEmbeddingService {
 
     @Override
     public Mono<Embedding> generateEmbedding(String text) {
-        return Mono.fromCallable(()->{
+        return Mono.fromCallable(() -> {
             if (!StringUtils.hasText(text)) {
                 throw new InvalidOperationException("Text is null", ErrorCodes.Embedding_Text_Not_Provided);
             }

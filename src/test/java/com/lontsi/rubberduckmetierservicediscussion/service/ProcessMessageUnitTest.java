@@ -1,6 +1,8 @@
 package com.lontsi.rubberduckmetierservicediscussion.service;
 
 import com.lontsi.rubberduckmetierservicediscussion.config.TestConfig;
+import com.lontsi.rubberduckmetierservicediscussion.dto.AssistanceMode;
+import com.lontsi.rubberduckmetierservicediscussion.dto.AssistantTier;
 import com.lontsi.rubberduckmetierservicediscussion.dto.MessageProducerDto;
 import com.lontsi.rubberduckmetierservicediscussion.dto.request.MessageRequestDto;
 import com.lontsi.rubberduckmetierservicediscussion.models.type.Model;
@@ -44,7 +46,7 @@ public class ProcessMessageUnitTest {
     public void setUp() {
         MockitoAnnotations.openMocks(this);
         processServiceMessage = new ProcessMessageServiceImpl(messageService, messageRetrievalService, messageProducerService);
-        messageRequestDto = new MessageRequestDto("Test content", "test-discussion-id", Model.CHATGPT3_5);
+        messageRequestDto = new MessageRequestDto("Test content", "test-discussion-id", Model.QUACK_1o, AssistanceMode.EXPLICATIF);
         principal = "test-principal";
     }
 
@@ -58,7 +60,7 @@ public class ProcessMessageUnitTest {
         when(messageService.saveMessage(messageRequestDto)).thenReturn(Mono.empty());
 
         // Lancer le test
-        StepVerifier.create(processServiceMessage.processMessage(new MessageProducerDto(principal, messageRequestDto.id_discussion(), messageRequestDto.content(), messageRequestDto.model())))
+        StepVerifier.create(processServiceMessage.processMessage(new MessageProducerDto(principal, messageRequestDto.id_discussion(), messageRequestDto.content(), messageRequestDto.model(),AssistantTier.STANDARD, AssistanceMode.EXPLICATIF)))
                 .verifyComplete();  // Vérifie que le flux se termine correctement (pas d'erreur)
 
         // Vérification que le service d'envoi de message a été appelé
@@ -83,7 +85,7 @@ public class ProcessMessageUnitTest {
         // Lancer le test
 
         StepVerifier.create(processServiceMessage
-                        .processMessage(new MessageProducerDto(principal, messageRequestDto.id_discussion(), messageRequestDto.content(), messageRequestDto.model())))
+                        .processMessage(new MessageProducerDto(principal, messageRequestDto.id_discussion(), messageRequestDto.content(), messageRequestDto.model(),AssistantTier.STANDARD, AssistanceMode.EXPLICATIF)))
                 .verifyComplete();  // Vérifie que le flux se termine correctement (pas d'erreur)
 
         // Vérification que le service d'envoi de message a été appelé avec le prompt enrichi
@@ -98,7 +100,7 @@ public class ProcessMessageUnitTest {
 
         // Lancer le test et vérifier qu'une erreur est retournée
         StepVerifier.create(processServiceMessage.processMessage(
-                        new MessageProducerDto(principal, messageRequestDto.id_discussion(), messageRequestDto.content(), messageRequestDto.model())
+                        new MessageProducerDto(principal, messageRequestDto.id_discussion(), messageRequestDto.content(), messageRequestDto.model(),AssistantTier.STANDARD, AssistanceMode.EXPLICATIF)
                 ))
                 .expectErrorMatches(throwable -> throwable instanceof RuntimeException && throwable.getMessage().equals("Save failed"))
                 .verify();

@@ -8,7 +8,6 @@ import com.lontsi.rubberduckmetierservicediscussion.service.IDiscussionService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.core.context.ReactiveSecurityContextHolder;
-import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.RestController;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
@@ -31,7 +30,7 @@ public class DiscussionController implements IDiscussionApi {
         return ReactiveSecurityContextHolder.getContext().flatMap(
                 SecurityContext -> {
 
-                    String principal = SecurityContext.getAuthentication().getName().toString();
+                    String principal = SecurityContext.getAuthentication().getName();
                     log.warn("Auth header detected: principal={}", principal);
 
                     if (principal == null) {
@@ -50,7 +49,7 @@ public class DiscussionController implements IDiscussionApi {
         return ReactiveSecurityContextHolder.getContext().flatMapMany(
                 SecurityContext -> {
 
-                    String principal = SecurityContext.getAuthentication().getName().toString();
+                    String principal = SecurityContext.getAuthentication().getName();
 
                     if (principal == null) {
                         // Pas d'auth info, on continue sans auth

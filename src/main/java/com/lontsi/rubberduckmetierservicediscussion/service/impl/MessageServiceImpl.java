@@ -14,7 +14,6 @@ import dev.langchain4j.data.embedding.Embedding;
 import lombok.RequiredArgsConstructor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.dao.DataAccessException;
 import org.springframework.stereotype.Service;
 import reactor.core.publisher.Mono;
@@ -46,7 +45,7 @@ public class MessageServiceImpl implements IMessageService {
         // save the message in the database
         return messageRepository.save(message)
                 .flatMap(savedMessage -> {
-                        // Generate embedding
+                    // Generate embedding
                     return embeddingService.generateEmbedding(message.getContent())
                             .flatMap(embedding -> {
                                 // Save embedding
@@ -77,7 +76,6 @@ public class MessageServiceImpl implements IMessageService {
     public Mono<Boolean> isFirstMessage(String idDiscussion) {
         return messageRepository.countAllByIdDiscussion(idDiscussion).map(count -> count == 1);
     }
-
 
 
     // convert to VectorDocument object

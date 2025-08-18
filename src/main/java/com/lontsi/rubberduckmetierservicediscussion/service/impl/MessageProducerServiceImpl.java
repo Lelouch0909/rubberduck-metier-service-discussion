@@ -18,11 +18,10 @@ import java.time.Duration;
 @Slf4j
 public class MessageProducerServiceImpl implements IMessageProducerService {
     private static final String TOPIC = "discussions";
-    private final ReactivePulsarTemplate<MessageProducerDto> reactivePulsarTemplate;
     private static final int MAX_RETRIES = 3;
     private static final Duration INITIAL_BACKOFF = Duration.ofMillis(500);
     private static final Duration TIMEOUT = Duration.ofSeconds(5);
-
+    private final ReactivePulsarTemplate<MessageProducerDto> reactivePulsarTemplate;
 
     @Override
     public Mono<Void> sendMessage(MessageProducerDto message) {
@@ -31,12 +30,12 @@ public class MessageProducerServiceImpl implements IMessageProducerService {
                 .withTopic(TOPIC)
                 .withMessageCustomizer(messageBuilder -> messageBuilder.key(message.id_discussion()))
                 .send().timeout(TIMEOUT)
-                        .retryWhen(Retry.backoff(MAX_RETRIES, INITIAL_BACKOFF))
-                        .doOnSuccess(unused -> log.debug("Successfully sent message: {}", message))
-                        .doOnError(err -> log.error("Failed to send message: {}", message, err))
-                        .onErrorResume(e -> Mono.error(
-                                new InvalidOperationException("Producer error", e, ErrorCodes.PRODUCER_CREATION_ERROR)
-                        )).then();
+                .retryWhen(Retry.backoff(MAX_RETRIES, INITIAL_BACKOFF))
+                .doOnSuccess(unused -> log.debug("Successfully sent message: {}", message))
+                .doOnError(err -> log.error("Failed to send message: {}", message, err))
+                .onErrorResume(e -> Mono.error(
+                        new InvalidOperationException("Producer error", e, ErrorCodes.PRODUCER_CREATION_ERROR)
+                )).then();
     }
 
 

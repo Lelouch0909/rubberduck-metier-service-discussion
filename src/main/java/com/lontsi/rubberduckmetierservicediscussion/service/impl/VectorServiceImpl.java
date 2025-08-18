@@ -21,7 +21,7 @@ import java.util.stream.Collectors;
 public class VectorServiceImpl implements IVectorStoreService {
 
     @Autowired
-    private  MongoDbEmbeddingStore embeddingStore;
+    private MongoDbEmbeddingStore embeddingStore;
 
 
     @Override

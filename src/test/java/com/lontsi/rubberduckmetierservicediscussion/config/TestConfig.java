@@ -14,7 +14,6 @@ import static org.mockito.Mockito.when;
 
 @Configuration
 @ActiveProfiles("test")
-
 public class TestConfig {
 
 
