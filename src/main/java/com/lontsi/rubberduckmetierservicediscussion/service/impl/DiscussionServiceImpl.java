@@ -9,6 +9,7 @@ import com.lontsi.rubberduckmetierservicediscussion.models.Discussion;
 import com.lontsi.rubberduckmetierservicediscussion.repository.IDiscussionRepository;
 import com.lontsi.rubberduckmetierservicediscussion.service.IDiscussionService;
 import lombok.extern.slf4j.Slf4j;
+import net.datafaker.providers.base.Bool;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
@@ -22,7 +23,7 @@ public class DiscussionServiceImpl implements IDiscussionService {
 
     private final IDiscussionRepository discussionRepository;
 
-    @Value("service.discussion.default_title")
+    @Value("${service.discussion.default_title}")
     private String default_title;
 
     @Autowired
@@ -56,5 +57,11 @@ public class DiscussionServiceImpl implements IDiscussionService {
                 .doOnNext(discussion -> log.warn("Discussion trouvée : {}", discussion));
 
         return discussions.map(DiscussionDto::fromEntity);
+    }
+
+    @Override
+    public Mono<Boolean> isUserDiscussion(String idUser, String idDiscussion) {
+      return discussionRepository.existsByIdAndIdUser(idDiscussion,idUser)
+              .onErrorReturn(false);
     }
 }

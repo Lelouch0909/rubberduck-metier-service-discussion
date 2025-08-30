@@ -19,6 +19,7 @@ import java.util.List;
 import java.util.Objects;
 import java.util.stream.Collectors;
 
+@Deprecated
 @Slf4j
 public class JwtTokenFilter implements WebFilter {
 
@@ -32,10 +33,13 @@ public class JwtTokenFilter implements WebFilter {
         ServerHttpRequest request = exchange.getRequest();
         try {
             String principal = request.getHeaders().getFirst("X-User-Principal");
-            String authoritiesHeader = Objects.requireNonNull(request.getHeaders().getFirst("X-User-Authorities")).toUpperCase();
+            String authoritiesHeader = request.getHeaders().getFirst("X-User-Authorities");
+            if (authoritiesHeader == null) {
+                log.error("Header X-User-Authorities absent !");
+            }
             String name = request.getHeaders().getFirst("X-User-Name");
             String credentials = request.getHeaders().getFirst("X-User-Credentials");
-            log.warn("Auth header detected: principal={}, authorities={}", principal, authoritiesHeader);
+            log.warn("Auth header detected: principal={}, authorities={},credentials={}", principal, authoritiesHeader,credentials);
 
 
             if (principal == null) {

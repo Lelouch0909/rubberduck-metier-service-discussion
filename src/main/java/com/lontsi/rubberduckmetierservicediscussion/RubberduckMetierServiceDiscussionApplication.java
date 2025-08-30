@@ -8,8 +8,8 @@ import org.springframework.web.reactive.config.EnableWebFlux;
 
 
 @SpringBootApplication
-@EnableReactiveMongoAuditing
 @EnableDiscoveryClient
+@EnableReactiveMongoAuditing
 @EnableWebFlux
 public class RubberduckMetierServiceDiscussionApplication {
 

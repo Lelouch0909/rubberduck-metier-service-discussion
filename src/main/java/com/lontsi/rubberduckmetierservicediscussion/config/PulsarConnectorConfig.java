@@ -1,8 +1,10 @@
 package com.lontsi.rubberduckmetierservicediscussion.config;
 
 import lombok.RequiredArgsConstructor;
+import org.apache.pulsar.client.api.ProducerBuilder;
 import org.apache.pulsar.client.api.PulsarClient;
 import org.apache.pulsar.client.api.PulsarClientException;
+import org.apache.pulsar.client.api.Schema;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -23,4 +25,10 @@ public class PulsarConnectorConfig {
                 .build();
     }
 
+    @Bean
+    public ProducerBuilder<String> producerBuilder(PulsarClient pulsarClient) {
+        return pulsarClient.newProducer(Schema.STRING)
+                .enableBatching(false)
+                .blockIfQueueFull(true);
+    }
 }

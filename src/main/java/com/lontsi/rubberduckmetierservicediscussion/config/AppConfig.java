@@ -5,19 +5,26 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.access.hierarchicalroles.RoleHierarchy;
 import org.springframework.security.access.hierarchicalroles.RoleHierarchyImpl;
+import org.springframework.security.authentication.AbstractAuthenticationToken;
 import org.springframework.security.config.annotation.method.configuration.EnableReactiveMethodSecurity;
+import org.springframework.core.convert.converter.Converter;
 import org.springframework.security.config.annotation.web.reactive.EnableWebFluxSecurity;
 import org.springframework.security.config.web.server.SecurityWebFiltersOrder;
 import org.springframework.security.config.web.server.ServerHttpSecurity;
+import org.springframework.security.core.GrantedAuthority;
+import org.springframework.security.core.authority.SimpleGrantedAuthority;
+import org.springframework.security.oauth2.jwt.Jwt;
+import org.springframework.security.oauth2.server.resource.authentication.ReactiveJwtAuthenticationConverter;
 import org.springframework.security.web.server.SecurityWebFilterChain;
 import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.reactive.CorsConfigurationSource;
 import org.springframework.web.server.ServerWebExchange;
 import org.springframework.web.server.WebFilter;
+import reactor.core.publisher.Flux;
+import reactor.core.publisher.Mono;
 
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.List;
+import java.util.*;
+import java.util.stream.Collectors;
 
 @Configuration
 @EnableWebFluxSecurity
@@ -25,31 +32,39 @@ import java.util.List;
 public class AppConfig {
 
 
+        @Bean
+        public SecurityWebFilterChain securityFilterChain(ServerHttpSecurity http) {
+            http
+                  //  .addFilterBefore(jwtTokenFilter(), SecurityWebFiltersOrder.REACTOR_CONTEXT)
+                    .csrf(ServerHttpSecurity.CsrfSpec::disable)
+                    .cors(cors -> cors.configurationSource(corsConfigurationSource()))
+                    .authorizeExchange(exchanges -> exchanges
+                            .pathMatchers("/actuator/**").permitAll()
+                            .anyExchange().authenticated()
+                    )
+                    .oauth2ResourceServer(oauth2 -> oauth2
+                            .jwt(jwt -> jwt
+                                    .jwtAuthenticationConverter(jwtAuthenticationConverter())
+                            )
+                    );
+
+
+            return http.build();
+        }
+
     @Bean
-    public SecurityWebFilterChain securityFilterChain(ServerHttpSecurity http) throws Exception {
-        http
-                .addFilterBefore(jwtTokenFilter(), SecurityWebFiltersOrder.REACTOR_CONTEXT)
-                .csrf(ServerHttpSecurity.CsrfSpec::disable)
-                .cors(cors -> cors.configurationSource(corsConfigurationSource()))
-                .authorizeExchange(
-                        exchanges -> exchanges
-                                .anyExchange().permitAll()
-                )
-
-        ;
-
-        return http.build();
+    public Converter<Jwt, Mono<AbstractAuthenticationToken>> jwtAuthenticationConverter() {
+        return new JwtReactiveAuthenticationConverter();
     }
-
 
     @Bean
     public RoleHierarchy roleHierarchy() {
-        return RoleHierarchyImpl.fromHierarchy("ROLE_ADMIN,ROLE_USER");
+        return RoleHierarchyImpl.fromHierarchy("ROLE_PROFESSIONAL,ROLE_PREMIUM,ROLE_USER,ROLE_STANDARD");
     }
 
-    public WebFilter jwtTokenFilter() {
+    /* public WebFilter jwtTokenFilter() {
         return new JwtTokenFilter();
-    }
+    } */
 
     private CorsConfigurationSource corsConfigurationSource() {
 

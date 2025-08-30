@@ -21,7 +21,7 @@ import static com.lontsi.rubberduckmetierservicediscussion.config.Utils.DISCUSSI
 @PreAuthorize("hasRole('USER')")
 public interface IDiscussionApi {
 
-    @PostMapping(DISCUSSION_ENDPOINT + "/create")
+    @PostMapping(DISCUSSION_ENDPOINT + "/cud")
     @Operation(summary = "Creer une nouvelle discussion", description = "Créer une nouvelle discussion pour l utilisateur et retourne son id" +
             "de la discussion qui apres les premiers messages sera update pour correspondre au sujet de la discussion")
     @ApiResponse(
@@ -36,7 +36,7 @@ public interface IDiscussionApi {
     @ResponseStatus(HttpStatus.CREATED)
     Mono<String> createDiscussion();
 
-    @GetMapping(DISCUSSION_ENDPOINT + "/findAllUserDiscussion")
+    @GetMapping(DISCUSSION_ENDPOINT + "/fad")
     @Operation(summary = "Rechercher toutes les discussions d'un utilisateur", description = "retourne la liste des discussions")
     @ApiResponse(
             responseCode = "302",
