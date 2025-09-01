@@ -1,7 +1,9 @@
 package com.lontsi.rubberduckmetierservicediscussion.service.impl;
 
+import com.lontsi.rubberduckmetierservicediscussion.dto.MessageDto;
 import com.lontsi.rubberduckmetierservicediscussion.dto.MessageProducerDto;
 import com.lontsi.rubberduckmetierservicediscussion.dto.request.MessageRequestDto;
+import com.lontsi.rubberduckmetierservicediscussion.models.type.Sender;
 import com.lontsi.rubberduckmetierservicediscussion.service.IMessageProducerService;
 import com.lontsi.rubberduckmetierservicediscussion.service.IMessageRetrievalService;
 import com.lontsi.rubberduckmetierservicediscussion.service.IMessageService;
@@ -20,14 +22,14 @@ public class ProcessMessageServiceImpl implements IProcessServiceMessage {
 
     @Override
     public Mono<Void> processMessage(MessageProducerDto requestDto) {
-        return messageService.saveMessage(new MessageRequestDto(requestDto.id_discussion(), requestDto.content(), requestDto.model(), requestDto.mode()))
+        return messageService.saveMessage(new MessageDto(requestDto.id_discussion(), requestDto.content(), Sender.USER))
                 .then(messageService.isFirstMessage(requestDto.id_discussion()).flatMap((isfirst) -> {
                     if (!isfirst) {
                         return messageRetrievalService
                                 .enrichPromptWithContext(requestDto.content(), requestDto.id_discussion())
                                 .flatMap(enrichedPrompt ->
                                         messageProducerService.sendMessage(
-                                                new MessageProducerDto(requestDto.principal(), enrichedPrompt, requestDto.id_discussion(), requestDto.model(), requestDto.tier(), requestDto.mode())
+                                                new MessageProducerDto(requestDto.principal(),requestDto.id_discussion(), enrichedPrompt, requestDto.model(), requestDto.tier(), requestDto.mode())
                                         )
                                 );
                     } else {

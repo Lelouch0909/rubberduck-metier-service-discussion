@@ -109,6 +109,7 @@ public class CustomWebSocketHandler implements WebSocketHandler {
 
     @Override
     public Mono<Void> handle(WebSocketSession session) {
+
         log.info("New WebSocket connection attempt");
 
         return session.getHandshakeInfo().getPrincipal()
@@ -207,9 +208,10 @@ public class CustomWebSocketHandler implements WebSocketHandler {
         String username = authentication.getName();
 
         // ✅ Associer la session à la discussion
+
         sessionMap.put(dto.id_discussion(), session);
-        log.info(" Session mapped: discussion={}, user={}",
-                dto.id_discussion(), username);
+        log.error(" Session mapped: discussion={}, user={}, session={}",
+                dto.id_discussion(), username,session.toString());
 
         // ✅ Créer le message producer
         MessageProducerDto producerDto = new MessageProducerDto(

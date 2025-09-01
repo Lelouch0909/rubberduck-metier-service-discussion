@@ -1,5 +1,6 @@
 package com.lontsi.rubberduckmetierservicediscussion.service.impl;
 
+import com.lontsi.rubberduckmetierservicediscussion.dto.MessageDto;
 import com.lontsi.rubberduckmetierservicediscussion.dto.request.MessageRequestDto;
 import com.lontsi.rubberduckmetierservicediscussion.exception.ErrorCodes;
 import com.lontsi.rubberduckmetierservicediscussion.exception.InvalidOperationException;
@@ -33,13 +34,13 @@ public class MessageServiceImpl implements IMessageService {
 
     // save the message in the database
     @Override
-    public Mono<Void> saveMessage(MessageRequestDto messageRequestDto) {
+    public Mono<Void> saveMessage(MessageDto messageRequestDto) {
 
         // convert to Message object
         Message message = new Message();
         message.setContent(messageRequestDto.content());
-        message.setIdDiscussion(messageRequestDto.id_discussion());
-        message.setSender(Sender.USER);
+        message.setIdDiscussion(messageRequestDto.idDiscussion());
+        message.setSender(messageRequestDto.sender());
 
 
         // save the message in the database
@@ -83,7 +84,9 @@ public class MessageServiceImpl implements IMessageService {
         return new VectorDocument(
                 message.getIdDiscussion(),
                 message.getId(),
-                embedding
+                embedding,
+                message.getContent(),
+                message.getSender()
 
         );
     }

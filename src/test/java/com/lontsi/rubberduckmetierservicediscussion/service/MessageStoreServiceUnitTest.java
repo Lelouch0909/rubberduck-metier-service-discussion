@@ -1,8 +1,7 @@
 package com.lontsi.rubberduckmetierservicediscussion.service;
 
-import com.lontsi.rubberduckmetierservicediscussion.config.TestConfig;
 import com.lontsi.rubberduckmetierservicediscussion.dto.AssistanceMode;
-import com.lontsi.rubberduckmetierservicediscussion.dto.AssistantTier;
+import com.lontsi.rubberduckmetierservicediscussion.dto.MessageDto;
 import com.lontsi.rubberduckmetierservicediscussion.dto.request.MessageRequestDto;
 import com.lontsi.rubberduckmetierservicediscussion.exception.InvalidOperationException;
 import com.lontsi.rubberduckmetierservicediscussion.models.Message;
@@ -16,7 +15,6 @@ import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
-import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -47,13 +45,13 @@ public class MessageStoreServiceUnitTest {
 
     private IMessageService messageService;
 
-    private MessageRequestDto messageRequestDto;
+    private MessageDto messageDto;
 
     @BeforeEach
     void setUp() {
         MockitoAnnotations.openMocks(this);
-    messageService = new MessageServiceImpl(messageRepository, embeddingService, vectorStoreService);
-        messageRequestDto = new MessageRequestDto("12345", "msg1", Model.QUACK_1o, AssistanceMode.EXPLICATIF);
+        messageService = new MessageServiceImpl(messageRepository, embeddingService, vectorStoreService);
+        messageDto = new MessageDto("12345", "msg1", Sender.USER);
     }
 
     @Test
@@ -62,7 +60,7 @@ public class MessageStoreServiceUnitTest {
         when(messageRepository.save(any())).thenReturn(Mono.error(new DataAccessException("DB error") {
         }));
 
-        StepVerifier.create(messageService.saveMessage(messageRequestDto))
+        StepVerifier.create(messageService.saveMessage(messageDto))
                 .expectErrorSatisfies(ex -> {
                     assertTrue(ex instanceof InvalidOperationException);
                     assertEquals("Error while saving message", ex.getMessage());
@@ -77,14 +75,13 @@ public class MessageStoreServiceUnitTest {
         when(messageRepository.save(any())).thenReturn(Mono.just(savedMessage));
         when(embeddingService.generateEmbedding(any())).thenThrow(new RuntimeException("Embedding error"));
 
-        StepVerifier.create(messageService.saveMessage(messageRequestDto))
+        StepVerifier.create(messageService.saveMessage(messageDto))
                 .expectErrorSatisfies(ex -> {
                     assertTrue(ex instanceof InvalidOperationException);
                     assertEquals("Embedding error", ex.getMessage());
                 })
                 .verify();
     }
-
 
 
     @Test
@@ -94,7 +91,7 @@ public class MessageStoreServiceUnitTest {
         String content = "Hello world!";
         String idDiscussion = "12345";
 
-        MessageRequestDto dto = new MessageRequestDto(idDiscussion, content,Model.QUACK_2, AssistanceMode.EXPLICATIF);
+        MessageRequestDto dto = new MessageRequestDto(idDiscussion, content, Model.QUACK_2, AssistanceMode.EXPLICATIF);
 
         Message savedMessage = new Message();
         savedMessage.setId("msg1");
@@ -110,7 +107,7 @@ public class MessageStoreServiceUnitTest {
         when(vectorStoreService.storeDocument(any(VectorDocument.class))).thenReturn(Mono.just("vectorId123"));
 
         // Then
-        StepVerifier.create(messageService.saveMessage(dto))
+        StepVerifier.create(messageService.saveMessage(messageDto))
                 .verifyComplete();
 
         verify(messageRepository).save(argThat(message ->
@@ -122,7 +119,7 @@ public class MessageStoreServiceUnitTest {
 
 
         verify(vectorStoreService).storeDocument(argThat(doc ->
-                        doc.getId_discussion().equals(idDiscussion) &&
+                doc.getId_discussion().equals(idDiscussion) &&
                         doc.getEmbedding().equals(embedding)
         ));
     }

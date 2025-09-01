@@ -3,6 +3,7 @@ package com.lontsi.rubberduckmetierservicediscussion.service;
 import com.lontsi.rubberduckmetierservicediscussion.config.TestConfig;
 import com.lontsi.rubberduckmetierservicediscussion.dto.AssistanceMode;
 import com.lontsi.rubberduckmetierservicediscussion.dto.AssistantTier;
+import com.lontsi.rubberduckmetierservicediscussion.dto.MessageDto;
 import com.lontsi.rubberduckmetierservicediscussion.dto.MessageProducerDto;
 import com.lontsi.rubberduckmetierservicediscussion.dto.request.MessageRequestDto;
 import com.lontsi.rubberduckmetierservicediscussion.models.type.Model;
@@ -40,6 +41,7 @@ public class ProcessMessageUnitTest {
     private IProcessServiceMessage processServiceMessage;
 
     private MessageRequestDto messageRequestDto;
+    private MessageDto messageDto;
     private String principal;
 
     @BeforeEach
@@ -57,7 +59,7 @@ public class ProcessMessageUnitTest {
 
         // Mock du service d'envoi de message pour vérifier l'envoi
         when(messageProducerService.sendMessage(any())).thenReturn(Mono.empty());
-        when(messageService.saveMessage(messageRequestDto)).thenReturn(Mono.empty());
+        when(messageService.saveMessage(messageDto)).thenReturn(Mono.empty());
 
         // Lancer le test
         StepVerifier.create(processServiceMessage.processMessage(new MessageProducerDto(principal, messageRequestDto.id_discussion(), messageRequestDto.content(), messageRequestDto.model(),AssistantTier.STANDARD, AssistanceMode.EXPLICATIF)))
@@ -73,7 +75,7 @@ public class ProcessMessageUnitTest {
         when(messageService.isFirstMessage(messageRequestDto.id_discussion())).thenReturn(Mono.just(false));
 
         // Configurer le mock pour saveMessage
-        when(messageService.saveMessage(messageRequestDto)).thenReturn(Mono.empty());
+        when(messageService.saveMessage(messageDto)).thenReturn(Mono.empty());
 
         // Mock du comportement d'enrichissement du prompt
         when(messageRetrievalService.enrichPromptWithContext(any(), any()))

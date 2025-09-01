@@ -14,17 +14,14 @@ import org.springframework.data.mongodb.repository.config.EnableMongoRepositorie
 @EnableMongoRepositories("com.lontsi.rubberduckmetierservicediscussion.repository")
 public class MongoStoreConfig {
 
-    @Value("${langchain4j.vectorStoreDB}")
+    @Value("${embedding.vectorStoreDB}")
     private String vectorStoreDB;
 
-    @Value("${langchain4j.vectorStoreCollectionName}")
+    @Value("${embedding.vectorStoreCollectionName}")
     private String vectorStoreCollectionName;
 
-    @Value("${langchain4j.vectorStoreIndexName}")
+    @Value("${embedding.vectorStoreIndexName}")
     private String vectorIndexName;
-
-    @Value("${langchain4j.vectorStoreConnectionString}")
-    private String vectorStoreConnectionString;
 
     @Autowired
     private MongoClient mongoClient;
@@ -35,7 +32,7 @@ public class MongoStoreConfig {
                 .fromClient(mongoClient)
                 .databaseName(vectorStoreDB)
                 .collectionName(vectorStoreCollectionName)
-                .createIndex(true)
+                .createIndex(false)
                 .indexName(vectorIndexName)
                 .build();
 
