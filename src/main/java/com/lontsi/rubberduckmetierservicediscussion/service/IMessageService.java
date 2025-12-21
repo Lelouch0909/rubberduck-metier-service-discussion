@@ -1,7 +1,6 @@
 package com.lontsi.rubberduckmetierservicediscussion.service;
 
 import com.lontsi.rubberduckmetierservicediscussion.dto.MessageDto;
-import com.lontsi.rubberduckmetierservicediscussion.dto.request.MessageRequestDto;
 import reactor.core.publisher.Mono;
 
 public interface IMessageService {

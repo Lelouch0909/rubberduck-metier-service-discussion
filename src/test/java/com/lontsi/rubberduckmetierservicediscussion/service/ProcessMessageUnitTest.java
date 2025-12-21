@@ -1,6 +1,5 @@
 package com.lontsi.rubberduckmetierservicediscussion.service;
 
-import com.lontsi.rubberduckmetierservicediscussion.config.TestConfig;
 import com.lontsi.rubberduckmetierservicediscussion.dto.AssistanceMode;
 import com.lontsi.rubberduckmetierservicediscussion.dto.AssistantTier;
 import com.lontsi.rubberduckmetierservicediscussion.dto.MessageDto;
@@ -10,14 +9,9 @@ import com.lontsi.rubberduckmetierservicediscussion.models.type.Model;
 import com.lontsi.rubberduckmetierservicediscussion.service.impl.ProcessMessageServiceImpl;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.TestInstance;
-import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
-import org.mockito.junit.jupiter.MockitoExtension;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.context.annotation.Profile;
 import org.springframework.test.context.ActiveProfiles;
 import reactor.core.publisher.Mono;
 import reactor.test.StepVerifier;

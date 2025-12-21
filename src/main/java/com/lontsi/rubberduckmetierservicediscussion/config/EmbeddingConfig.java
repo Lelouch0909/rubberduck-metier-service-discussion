@@ -1,7 +1,6 @@
 package com.lontsi.rubberduckmetierservicediscussion.config;
 
 import dev.langchain4j.model.embedding.EmbeddingModel;
-import dev.langchain4j.model.embedding.onnx.allminilml6v2.AllMiniLmL6V2EmbeddingModel;
 import dev.langchain4j.model.github.GitHubModelsEmbeddingModel;
 import dev.langchain4j.model.github.GitHubModelsEmbeddingModelName;
 import org.springframework.beans.factory.annotation.Value;
@@ -24,7 +23,7 @@ public class EmbeddingConfig {
                     .dimensions(3072)
                     .logRequestsAndResponses(false)
                     .maxRetries(2)
-                    .timeout(Duration.ofSeconds(20))
+                    .timeout(Duration.ofSeconds(10))
                     .build();
     }
 }

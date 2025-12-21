@@ -2,7 +2,6 @@ package com.lontsi.rubberduckmetierservicediscussion.service.impl;
 
 import com.lontsi.rubberduckmetierservicediscussion.dto.MessageDto;
 import com.lontsi.rubberduckmetierservicediscussion.dto.MessageProducerDto;
-import com.lontsi.rubberduckmetierservicediscussion.dto.request.MessageRequestDto;
 import com.lontsi.rubberduckmetierservicediscussion.models.type.Sender;
 import com.lontsi.rubberduckmetierservicediscussion.service.IMessageProducerService;
 import com.lontsi.rubberduckmetierservicediscussion.service.IMessageRetrievalService;

@@ -9,7 +9,6 @@ import com.lontsi.rubberduckmetierservicediscussion.models.Discussion;
 import com.lontsi.rubberduckmetierservicediscussion.repository.IDiscussionRepository;
 import com.lontsi.rubberduckmetierservicediscussion.service.IDiscussionService;
 import lombok.extern.slf4j.Slf4j;
-import net.datafaker.providers.base.Bool;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;

@@ -210,7 +210,7 @@ public class CustomWebSocketHandler implements WebSocketHandler {
         // ✅ Associer la session à la discussion
 
         sessionMap.put(dto.id_discussion(), session);
-        log.error(" Session mapped: discussion={}, user={}, session={}",
+        log.warn(" Session mapped: discussion={}, user={}, session={}",
                 dto.id_discussion(), username,session.toString());
 
         // ✅ Créer le message producer

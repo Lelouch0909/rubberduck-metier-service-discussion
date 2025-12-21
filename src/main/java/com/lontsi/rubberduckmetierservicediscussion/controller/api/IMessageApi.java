@@ -1,7 +1,6 @@
 package com.lontsi.rubberduckmetierservicediscussion.controller.api;
 
 import com.lontsi.rubberduckmetierservicediscussion.dto.MessageConsumerDto;
-import com.lontsi.rubberduckmetierservicediscussion.dto.MessageProducerDto;
 import io.swagger.v3.oas.annotations.Operation;
 import org.apache.pulsar.client.api.Message;
 import org.apache.pulsar.client.api.SubscriptionType;

@@ -1,12 +1,10 @@
 package com.lontsi.rubberduckmetierservicediscussion.service.impl;
 
 import com.lontsi.rubberduckmetierservicediscussion.dto.MessageDto;
-import com.lontsi.rubberduckmetierservicediscussion.dto.request.MessageRequestDto;
 import com.lontsi.rubberduckmetierservicediscussion.exception.ErrorCodes;
 import com.lontsi.rubberduckmetierservicediscussion.exception.InvalidOperationException;
 import com.lontsi.rubberduckmetierservicediscussion.models.Message;
 import com.lontsi.rubberduckmetierservicediscussion.models.VectorDocument;
-import com.lontsi.rubberduckmetierservicediscussion.models.type.Sender;
 import com.lontsi.rubberduckmetierservicediscussion.repository.IMessageRepository;
 import com.lontsi.rubberduckmetierservicediscussion.service.IEmbeddingService;
 import com.lontsi.rubberduckmetierservicediscussion.service.IMessageService;

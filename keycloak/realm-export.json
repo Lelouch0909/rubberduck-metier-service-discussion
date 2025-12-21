@@ -1,0 +1,36 @@
+{
+  "realm": "rubberduck",
+  "enabled": true,
+  "id": "rubberduck",
+  "displayName": "Rubberduck Realm",
+  "clients": [
+    {
+      "clientId": "rubberduck-client",
+      "name": "rubberduck-client",
+      "enabled": true,
+      "protocol": "openid-connect",
+      "publicClient": true,
+      "directAccessGrantsEnabled": true,
+      "redirectUris": ["*"],
+      "attributes": {}
+    }
+  ],
+  "roles": {
+    "realm": []
+  },
+  "users": [
+    {
+      "username": "test-user",
+      "enabled": true,
+      "emailVerified": true,
+      "credentials": [
+        {
+          "type": "password",
+          "value": "password",
+          "temporary": false
+        }
+      ]
+    }
+  ]
+}
+

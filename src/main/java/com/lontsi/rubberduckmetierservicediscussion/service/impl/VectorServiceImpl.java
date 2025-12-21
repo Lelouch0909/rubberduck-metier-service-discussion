@@ -5,7 +5,6 @@ import com.lontsi.rubberduckmetierservicediscussion.exception.ErrorCodes;
 import com.lontsi.rubberduckmetierservicediscussion.exception.InvalidOperationException;
 import com.lontsi.rubberduckmetierservicediscussion.models.VectorDocument;
 import com.lontsi.rubberduckmetierservicediscussion.service.IVectorStoreService;
-import dev.langchain4j.data.document.Metadata;
 import dev.langchain4j.data.embedding.Embedding;
 import dev.langchain4j.data.segment.TextSegment;
 import dev.langchain4j.store.embedding.EmbeddingSearchRequest;

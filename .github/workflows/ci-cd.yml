@@ -1,0 +1,341 @@
+name: Service Discussion CI/CD
+
+on:
+  push:
+    branches:
+      - master
+
+env:
+  REGISTRY: docker.io
+  IMAGE_NAME: lelouch0909/rubberduck-metier-service-discussion
+  SERVICE_NAME: rubberduck-metier-service-discussion
+  DEPLOY_PATH: /var/www/rubberduck/rubberduck-metier-service-discussion
+  SERVICE_PORT: 40005
+  CONTAINER_PORT: 8090
+
+jobs:
+  build-and-push-image:
+    runs-on: ubuntu-latest
+    steps:
+      # Étape 1: Récupérer le code source du dépôt
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      # Étape 2: Importer les secrets depuis Vault
+      - name: Import Secrets from Vault
+        uses: hashicorp/vault-action@v3
+        with:
+          url: ${{ secrets.VAULT_ADDR }}
+          method: approle
+          roleId: ${{ secrets.VAULT_ROLE_ID }}
+          secretId: ${{ secrets.VAULT_SECRET_ID }}
+          secrets: |
+            secret/rubberduck/api/data/deployment/preprod DOCKER_USERNAME | DOCKER_USERNAME ;
+            secret/rubberduck/api/data/deployment/preprod DOCKER_PASSWORD | DOCKER_PASSWORD ;
+            secret/rubberduck/api/data/deployment/preprod USERNAME_GITHUB | USERNAME_GITHUB ;
+            secret/rubberduck/api/data/deployment/preprod TOKEN_GITHUB | TOKEN_GITHUB ;
+
+      # Étape 3: Configurer Java 17 avec cache Maven
+      - name: Set up JDK 17
+        uses: actions/setup-java@v4
+        with:
+          java-version: "17"
+          distribution: "temurin"
+          cache: maven
+
+      # Étape 4: Construire le projet Maven (cache automatique)
+      - name: Build project with Maven
+        env:
+          USERNAME_GITHUB: ${{ env.USERNAME_GITHUB }}
+          TOKEN_GITHUB: ${{ env.TOKEN_GITHUB }}
+        run: mvn clean package -DskipTests
+
+      # Étape 5: Configurer Docker Buildx avec cache
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      # Étape 6: Se connecter à Docker Hub
+      - name: Log in to Docker Hub
+        uses: docker/login-action@v3
+        with:
+          username: ${{ env.DOCKER_USERNAME }}
+          password: ${{ env.DOCKER_PASSWORD }}
+
+      # Étape 7: Construire et pousser l'image Docker avec cache
+      - name: Build and push Docker image
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          push: true
+          tags: |
+            ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ github.sha }}
+            ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:latest
+          cache-from: type=registry,ref=${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:buildcache
+          cache-to: type=registry,ref=${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:buildcache,mode=max
+
+      - name: Export image tag
+        id: meta
+        run: echo "image_tag=${{ github.sha }}" >> "$GITHUB_OUTPUT"
+
+    outputs:
+      image_tag: ${{ steps.meta.outputs.image_tag }}
+
+  deploy-compose:
+    runs-on: ubuntu-latest
+    needs: build-and-push-image
+    if: ${{ vars.UPDATE_COMPOSE == 'true' }}
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Import Secrets from Vault
+        uses: hashicorp/vault-action@v3
+        with:
+          url: ${{ secrets.VAULT_ADDR }}
+          method: approle
+          roleId: ${{ secrets.VAULT_ROLE_ID }}
+          secretId: ${{ secrets.VAULT_SECRET_ID }}
+          secrets: |
+            secret/rubberduck/api/data/deployment/preprod VPS_HOST | VPS_HOST ;
+            secret/rubberduck/api/data/deployment/preprod VPS_USER | VPS_USER ;
+            secret/rubberduck/api/data/deployment/preprod VPS_SSH_KEY | VPS_SSH_KEY ;
+            secret/rubberduck/api/data/deployment/preprod VPS_SSH_PORT | VPS_SSH_PORT ;
+            secret/rubberduck/api/data/deployment/preprod DOCKER_USERNAME | DOCKER_USERNAME ;
+            secret/rubberduck/api/data/deployment/preprod DOCKER_PASSWORD | DOCKER_PASSWORD ;
+            secret/rubberduck/api/data/deployment/preprod KEYCLOAK_ADMIN | KEYCLOAK_ADMIN ;
+            secret/rubberduck/api/data/deployment/preprod KEYCLOAK_ADMIN_PASSWORD | KEYCLOAK_ADMIN_PASSWORD ;
+            secret/rubberduck/api/data/deployment/preprod KEYCLOAK_POSTGRES_PASSWORD | KEYCLOAK_POSTGRES_PASSWORD ;
+
+      - name: Setup SSH
+        run: |
+          mkdir -p ~/.ssh
+          echo "${{ env.VPS_SSH_KEY }}" > ~/.ssh/id_rsa
+          chmod 600 ~/.ssh/id_rsa
+          ssh-keyscan -p ${{ env.VPS_SSH_PORT }} ${{ env.VPS_HOST }} >> ~/.ssh/known_hosts
+
+      - name: Copy docker-compose and keycloak folder to VPS
+        run: |
+          set -e
+          echo "Copying docker-compose.yml and keycloak folder to VPS..."
+          scp -P ${{ env.VPS_SSH_PORT }} docker-compose.yml ${{ env.VPS_USER }}@${{ env.VPS_HOST }}:${{ env.DEPLOY_PATH }}/
+          scp -r -P ${{ env.VPS_SSH_PORT }} keycloak ${{ env.VPS_USER }}@${{ env.VPS_HOST }}:${{ env.DEPLOY_PATH }}/
+          echo "Files copied successfully"
+
+      - name: Start compose services on VPS
+        uses: appleboy/ssh-action@v0.1.10
+        with:
+          host: ${{ env.VPS_HOST }}
+          username: ${{ env.VPS_USER }}
+          key: ${{ env.VPS_SSH_KEY }}
+          port: ${{ env.VPS_SSH_PORT }}
+          script: |
+            set -e
+            cd ${{ env.DEPLOY_PATH }}
+            echo "Connexion à Docker Hub..."
+            podman login ${{ env.REGISTRY }} -u "${{ env.DOCKER_USERNAME }}" -p "${{ env.DOCKER_PASSWORD }}"
+
+            echo "Creating .env file for compose..."
+            echo "KEYCLOAK_ADMIN=${{ env.KEYCLOAK_ADMIN }}" > .env
+            echo "KEYCLOAK_ADMIN_PASSWORD=${{ env.KEYCLOAK_ADMIN_PASSWORD }}" >> .env
+            echo "KEYCLOAK_POSTGRES_PASSWORD=${{ env.KEYCLOAK_POSTGRES_PASSWORD }}" >> .env
+
+            echo "Starting compose services..."
+            podman-compose up -d postgres keycloak pulsar
+
+            echo "Waiting for services to be healthy..."
+            sleep 30
+
+            echo "Compose services started"
+            podman ps
+
+      - name: Cleanup SSH key
+        if: always()
+        run: rm -f ~/.ssh/id_rsa
+
+  deploy-to-vps:
+    runs-on: ubuntu-latest
+    needs: [build-and-push-image, deploy-compose]
+    if: always() && needs.build-and-push-image.result == 'success'
+    steps:
+      - name: Import Secrets from Vault
+        uses: hashicorp/vault-action@v3
+        with:
+          url: ${{ secrets.VAULT_ADDR }}
+          method: approle
+          roleId: ${{ secrets.VAULT_ROLE_ID }}
+          secretId: ${{ secrets.VAULT_SECRET_ID }}
+          secrets: |
+            secret/rubberduck/api/data/deployment/preprod DOCKER_USERNAME | DOCKER_USERNAME ;
+            secret/rubberduck/api/data/deployment/preprod DOCKER_PASSWORD | DOCKER_PASSWORD ;
+            secret/rubberduck/api/data/deployment/preprod VPS_HOST | VPS_HOST ;
+            secret/rubberduck/api/data/deployment/preprod VPS_USER | VPS_USER ;
+            secret/rubberduck/api/data/deployment/preprod VPS_SSH_KEY | VPS_SSH_KEY ;
+            secret/rubberduck/api/data/deployment/preprod VPS_SSH_PORT | VPS_SSH_PORT ;
+            secret/rubberduck/api/data/deployment/preprod EUREKA_URL | EUREKA_URL ;
+            secret/rubberduck/api/data/deployment/preprod KEYCLOAK_ISSUER_URI | KEYCLOAK_ISSUER_URI ;
+            secret/rubberduck/api/data/deployment/preprod KEYCLOAK_JWK_SET_URI | KEYCLOAK_JWK_SET_URI ;
+            secret/rubberduck/api/data/deployment/preprod MONGODB_URI | MONGODB_URI ;
+            secret/rubberduck/api/data/deployment/preprod PULSAR_SERVICE_URL | PULSAR_SERVICE_URL ;
+            secret/rubberduck/api/data/deployment/preprod PULSAR_ADMIN_URL | PULSAR_ADMIN_URL ;
+            secret/rubberduck/api/data/deployment/preprod GITHUB_MODEL_TOKEN | GITHUB_MODEL_TOKEN ;
+            secret/rubberduck/api/data/deployment/preprod CONFIG_SERVER_URI | CONFIG_SERVER_URI ;
+            secret/rubberduck/api/data/deployment/preprod MONGODB_VECTOR_DB | MONGODB_VECTOR_DB ;
+
+      - name: Deploy to VPS
+        uses: appleboy/ssh-action@v0.1.10
+        with:
+          host: ${{ env.VPS_HOST }}
+          username: ${{ env.VPS_USER }}
+          key: ${{ env.VPS_SSH_KEY }}
+          port: ${{ env.VPS_SSH_PORT }}
+          script: |
+            set -e
+            IMAGE_TAG="${{ needs.build-and-push-image.outputs.image_tag }}"
+            echo "Deploying version: ${IMAGE_TAG}"
+
+            mkdir -p ${{ env.DEPLOY_PATH }}
+            cd ${{ env.DEPLOY_PATH }}
+
+            echo "Logging in to Docker Hub..."
+            podman login ${{ env.REGISTRY }} -u "${{ env.DOCKER_USERNAME }}" -p "${{ env.DOCKER_PASSWORD }}"
+
+            podman network create rubberduck-network 2>/dev/null || true
+
+            echo "Stopping existing container..."
+            podman stop ${{ env.SERVICE_NAME }} 2>/dev/null || true
+            podman rm ${{ env.SERVICE_NAME }} 2>/dev/null || true
+
+            echo "Pulling Docker image (with layer cache)..."
+            podman pull ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${IMAGE_TAG}
+
+            echo "Cleaning up old images (keeping last 3)..."
+            podman images ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }} --format "{{.ID}} {{.CreatedAt}}" | \
+              sort -k2 -r | tail -n +4 | awk '{print $1}' | xargs -r podman rmi 2>/dev/null || true
+
+            echo "Starting container..."
+            podman run -d \
+              --name ${{ env.SERVICE_NAME }} \
+              --network rubberduck-network \
+              -p ${{ env.SERVICE_PORT }}:${{ env.CONTAINER_PORT }} \
+              -e SPRING_PROFILES_ACTIVE=preprod \
+              -e EUREKA_URL="${{ env.EUREKA_URL }}" \
+              -e KEYCLOAK_ISSUER_URI="${{ env.KEYCLOAK_ISSUER_URI }}" \
+              -e KEYCLOAK_JWK_SET_URI="${{ env.KEYCLOAK_JWK_SET_URI }}" \
+              -e MONGODB_URI="${{ env.MONGODB_URI }}" \
+              -e PULSAR_SERVICE_URL="${{ env.PULSAR_SERVICE_URL }}" \
+              -e PULSAR_ADMIN_URL="${{ env.PULSAR_ADMIN_URL }}" \
+              -e GITHUB_MODEL_TOKEN="${{ env.GITHUB_MODEL_TOKEN }}" \
+              -e CONFIG_SERVER_URI="${{ env.CONFIG_SERVER_URI }}" \
+              -e MONGODB_VECTOR_DB="${{ env.MONGODB_VECTOR_DB }}" \
+              --restart unless-stopped \
+              ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${IMAGE_TAG}
+
+            echo "Waiting for service to start..."
+            sleep 10
+
+            echo "Verifying deployment..."
+            if podman ps | grep -q ${{ env.SERVICE_NAME }}; then
+              echo "Container is active"
+              podman ps | grep ${{ env.SERVICE_NAME }}
+              podman logs ${{ env.SERVICE_NAME }} --tail 30 || true
+            else
+              echo "ERROR: Container failed to start"
+              podman logs ${{ env.SERVICE_NAME }} || true
+              exit 1
+            fi
+
+      - name: Health Check
+        id: health_check
+        uses: appleboy/ssh-action@v0.1.10
+        with:
+          host: ${{ env.VPS_HOST }}
+          username: ${{ env.VPS_USER }}
+          key: ${{ env.VPS_SSH_KEY }}
+          port: ${{ env.VPS_SSH_PORT }}
+          script: |
+            set -e
+            echo "Health-check HTTP (port ${{ env.SERVICE_PORT }})"
+
+            # Wait for Spring Boot to fully start
+            sleep 30
+
+            # Try health check multiple times
+            MAX_RETRIES=5
+            RETRY_COUNT=0
+
+            while [ $RETRY_COUNT -lt $MAX_RETRIES ]; do
+              if curl -fsS http://127.0.0.1:${{ env.SERVICE_PORT }}/actuator/health 2>/dev/null; then
+                echo ""
+                echo "Service is healthy!"
+                exit 0
+              fi
+              RETRY_COUNT=$((RETRY_COUNT + 1))
+              echo "Retry $RETRY_COUNT/$MAX_RETRIES..."
+              sleep 10
+            done
+
+            echo "ERROR: Health check failed after $MAX_RETRIES retries"
+            podman logs ${{ env.SERVICE_NAME }} --tail 50
+            exit 1
+
+    outputs:
+      health_status: ${{ steps.health_check.outcome }}
+
+  notify:
+    runs-on: ubuntu-latest
+    needs: [build-and-push-image, deploy-to-vps]
+    if: always()
+    steps:
+      - name: Import Secrets from Vault
+        uses: hashicorp/vault-action@v3
+        with:
+          url: ${{ secrets.VAULT_ADDR }}
+          method: approle
+          roleId: ${{ secrets.VAULT_ROLE_ID }}
+          secretId: ${{ secrets.VAULT_SECRET_ID }}
+          secrets: |
+            secret/rubberduck/api/data/deployment/preprod DISCORD_WEBHOOK_URL | DISCORD_WEBHOOK_URL ;
+
+      - name: Send Discord Notification - Success
+        if: needs.deploy-to-vps.result == 'success'
+        run: |
+          curl -H "Content-Type: application/json" \
+            -d "{
+              \"embeds\": [{
+                \"title\": \" Déploiement Réussi\",
+                \"description\": \"Le service **${{ env.SERVICE_NAME }}** a été déployé avec succès\",
+                \"color\": 3066993,
+                \"fields\": [
+                  {\"name\": \"Service\", \"value\": \"\`${{ env.SERVICE_NAME }}\`\", \"inline\": true},
+                  {\"name\": \"Version\", \"value\": \"\`${{ needs.build-and-push-image.outputs.image_tag }}\`\", \"inline\": true},
+                  {\"name\": \" Port\", \"value\": \"\`${{ env.SERVICE_PORT }}\`\", \"inline\": true},
+                  {\"name\": \"Date\", \"value\": \"\`$(date '+%Y-%m-%d %H:%M:%S')\`\", \"inline\": false}
+                ],
+                \"footer\": {\"text\": \"GitHub Actions CI/CD\"}
+              }]
+            }" \
+            ${{ env.DISCORD_WEBHOOK_URL }}
+
+      - name: Send Discord Notification - Failure
+        if: needs.deploy-to-vps.result == 'failure' || needs.build-and-push-image.result == 'failure'
+        run: |
+          curl -H "Content-Type: application/json" \
+            -d "{
+              \"embeds\": [{
+                \"title\": \" Échec du Déploiement\",
+                \"description\": \"Le déploiement du service **${{ env.SERVICE_NAME }}** a échoué\",
+                \"color\": 15158332,
+                \"fields\": [
+                  {\"name\": \" Service\", \"value\": \"\`${{ env.SERVICE_NAME }}\`\", \"inline\": true},
+                  {\"name\": \" Version\", \"value\": \"\`${{ needs.build-and-push-image.outputs.image_tag }}\`\", \"inline\": true},
+                  {\"name\": \" Date\", \"value\": \"\`$(date '+%Y-%m-%d %H:%M:%S')\`\", \"inline\": false},
+                  {\"name\": \" Logs\", \"value\": \"[Voir les logs GitHub Actions](https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }})\", \"inline\": false}
+                ],
+                \"footer\": {\"text\": \"GitHub Actions CI/CD\"}
+              }]
+            }" \
+            ${{ env.DISCORD_WEBHOOK_URL }}
+
+      - name: Cleanup Docker login
+        if: always()
+        run: rm -f ~/.docker/config.json || true

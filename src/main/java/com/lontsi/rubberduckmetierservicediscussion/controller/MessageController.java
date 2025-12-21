@@ -3,11 +3,8 @@ package com.lontsi.rubberduckmetierservicediscussion.controller;
 import com.lontsi.rubberduckmetierservicediscussion.controller.api.IMessageApi;
 import com.lontsi.rubberduckmetierservicediscussion.dto.MessageConsumerDto;
 import com.lontsi.rubberduckmetierservicediscussion.dto.MessageDto;
-import com.lontsi.rubberduckmetierservicediscussion.dto.MessageProducerDto;
-import com.lontsi.rubberduckmetierservicediscussion.dto.request.MessageRequestDto;
 import com.lontsi.rubberduckmetierservicediscussion.models.type.Sender;
 import com.lontsi.rubberduckmetierservicediscussion.service.IMessageService;
-import com.lontsi.rubberduckmetierservicediscussion.service.IProcessServiceMessage;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.pulsar.client.api.Message;
@@ -50,7 +47,7 @@ public class MessageController implements IMessageApi {
                                     String completeContent = messageChunks.stream()
                                             .map(msg -> msg.getValue().content())
                                             .collect(Collectors.joining());
-
+                                    log.warn(completeContent);
                                     WebSocketSession session = sessionMap.get(idDiscussion);
 
                                     if (session != null && session.isOpen()) {

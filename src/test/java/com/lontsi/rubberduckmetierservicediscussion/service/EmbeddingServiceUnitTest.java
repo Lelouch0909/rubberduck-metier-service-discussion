@@ -1,6 +1,5 @@
 package com.lontsi.rubberduckmetierservicediscussion.service;
 
-import com.lontsi.rubberduckmetierservicediscussion.config.TestConfig;
 import com.lontsi.rubberduckmetierservicediscussion.exception.ErrorCodes;
 import com.lontsi.rubberduckmetierservicediscussion.exception.InvalidOperationException;
 import com.lontsi.rubberduckmetierservicediscussion.service.impl.EmbeddingServiceImpl;

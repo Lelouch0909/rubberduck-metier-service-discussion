@@ -26,11 +26,6 @@ public enum AssistanceMode {
     /**
      * L'assistant fournit la solution, puis détaille chaque étape et encourage l'utilisateur à poser des questions.
      */
-    SOUTIEN_TOTAL,
-
-    /**
-     * L'utilisateur choisit son niveau d'autonomie ou le mode d'aide souhaité.
-     */
-    PERSONNALISE
+    SOUTIEN_TOTAL
 
 }
