@@ -46,6 +46,10 @@ jobs:
           chmod 600 ~/.ssh/id_rsa
           ssh-keyscan -p ${{ env.VPS_SSH_PORT }} ${{ env.VPS_HOST }} >> ~/.ssh/known_hosts
 
+      - name: Create deployment directory on VPS
+        run: |
+          ssh -p ${{ env.VPS_SSH_PORT }} ${{ env.VPS_USER }}@${{ env.VPS_HOST }} "mkdir -p ${{ env.DEPLOY_PATH }}"
+
       - name: Copy docker-compose and keycloak folder to VPS
         run: |
           set -e
@@ -167,6 +171,7 @@ jobs:
             secret/rubberduck/api/data/deployment/preprod KEYCLOAK_ISSUER_URI | KEYCLOAK_ISSUER_URI ;
             secret/rubberduck/api/data/deployment/preprod KEYCLOAK_JWK_SET_URI | KEYCLOAK_JWK_SET_URI ;
             secret/rubberduck/api/data/deployment/preprod MONGODB_URI | MONGODB_URI ;
+            secret/rubberduck/api/data/deployment/preprod MONGODB_DATABASE | MONGODB_DATABASE ;
             secret/rubberduck/api/data/deployment/preprod PULSAR_SERVICE_URL | PULSAR_SERVICE_URL ;
             secret/rubberduck/api/data/deployment/preprod PULSAR_ADMIN_URL | PULSAR_ADMIN_URL ;
             secret/rubberduck/api/data/deployment/preprod GITHUB_MODEL_TOKEN | GITHUB_MODEL_TOKEN ;
@@ -214,16 +219,22 @@ jobs:
               -e KEYCLOAK_ISSUER_URI="${{ env.KEYCLOAK_ISSUER_URI }}" \
               -e KEYCLOAK_JWK_SET_URI="${{ env.KEYCLOAK_JWK_SET_URI }}" \
               -e MONGODB_URI="${{ env.MONGODB_URI }}" \
+              -e MONGODB_DATABASE="${{ env.MONGODB_DATABASE }}" \
               -e PULSAR_SERVICE_URL="${{ env.PULSAR_SERVICE_URL }}" \
               -e PULSAR_ADMIN_URL="${{ env.PULSAR_ADMIN_URL }}" \
               -e GITHUB_MODEL_TOKEN="${{ env.GITHUB_MODEL_TOKEN }}" \
               -e CONFIG_SERVER_URI="${{ env.CONFIG_SERVER_URI }}" \
               -e MONGODB_VECTOR_DB="${{ env.MONGODB_VECTOR_DB }}" \
+              --health-cmd="curl -f http://localhost:${{ env.CONTAINER_PORT }}/actuator/health || exit 1" \
+              --health-interval=15s \
+              --health-timeout=5s \
+              --health-retries=3 \
+              --health-start-period=40s \
               --restart unless-stopped \
               ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${IMAGE_TAG}
 
-            echo "Waiting for service to start..."
-            sleep 10
+            echo "Waiting for container to initialize..."
+            sleep 5
 
             echo "Verifying deployment..."
             if podman ps | grep -q ${{ env.SERVICE_NAME }}; then
@@ -246,27 +257,32 @@ jobs:
           port: ${{ env.VPS_SSH_PORT }}
           script: |
             set -e
-            echo "Health-check HTTP (port ${{ env.SERVICE_PORT }})"
+            echo "Checking service health (port ${{ env.SERVICE_PORT }})"
 
-            # Wait for Spring Boot to fully start
-            sleep 30
+            # Wait for Spring Boot to start
+            sleep 15
 
-            # Try health check multiple times
-            MAX_RETRIES=5
+            # Try health check with reduced retries
+            MAX_RETRIES=3
             RETRY_COUNT=0
 
             while [ $RETRY_COUNT -lt $MAX_RETRIES ]; do
               if curl -fsS http://127.0.0.1:${{ env.SERVICE_PORT }}/actuator/health 2>/dev/null; then
                 echo ""
                 echo "Service is healthy!"
+                echo "Container health status:"
+                podman inspect ${{ env.SERVICE_NAME }} --format='{{.State.Healthcheck.Status}}' || true
                 exit 0
               fi
               RETRY_COUNT=$((RETRY_COUNT + 1))
               echo "Retry $RETRY_COUNT/$MAX_RETRIES..."
-              sleep 10
+              sleep 5
             done
 
             echo "ERROR: Health check failed after $MAX_RETRIES retries"
+            echo "Container status:"
+            podman ps -a | grep ${{ env.SERVICE_NAME }} || true
+            echo "Last 50 log lines:"
             podman logs ${{ env.SERVICE_NAME }} --tail 50
             exit 1
 
