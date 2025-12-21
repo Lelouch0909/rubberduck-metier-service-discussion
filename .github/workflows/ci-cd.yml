@@ -225,7 +225,7 @@ jobs:
               -e GITHUB_MODEL_TOKEN="${{ env.GITHUB_MODEL_TOKEN }}" \
               -e CONFIG_SERVER_URI="${{ env.CONFIG_SERVER_URI }}" \
               -e MONGODB_VECTOR_DB="${{ env.MONGODB_VECTOR_DB }}" \
-              --health-cmd="curl -f http://localhost:${{ env.CONTAINER_PORT }}/actuator/health || exit 1" \
+              --health-cmd="python3 -c \"import urllib.request; urllib.request.urlopen('http://127.0.0.1:${{ env.CONTAINER_PORT }}/actuator/health')\" || exit 1" \
               --health-interval=15s \
               --health-timeout=5s \
               --health-retries=3 \
