@@ -77,7 +77,7 @@ jobs:
             echo "KEYCLOAK_POSTGRES_PASSWORD=${{ env.KEYCLOAK_POSTGRES_PASSWORD }}" >> .env
 
             echo "Starting compose services..."
-            podman-compose up -d postgres keycloak pulsar
+            /home/deploy/.local/bin/podman-compose up -d postgres keycloak pulsar
 
             echo "Waiting for services to be healthy..."
             sleep 30
@@ -267,7 +267,7 @@ jobs:
             RETRY_COUNT=0
 
             while [ $RETRY_COUNT -lt $MAX_RETRIES ]; do
-              if curl -fsS http://127.0.0.1:${{ env.SERVICE_PORT }}/actuator/health 2>/dev/null; then
+              if python3 -c "import urllib.request; urllib.request.urlopen('http://127.0.0.1:${{ env.SERVICE_PORT }}/actuator/health')" 2>/dev/null; then
                 echo ""
                 echo "Service is healthy!"
                 echo "Container health status:"
