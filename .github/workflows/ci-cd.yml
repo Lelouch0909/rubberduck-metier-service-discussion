@@ -69,7 +69,7 @@ jobs:
             set -e
             cd ${{ env.DEPLOY_PATH }}
             echo "Connexion à Docker Hub..."
-            podman login ${{ env.REGISTRY }} -u "${{ env.DOCKER_USERNAME }}" -p "${{ env.DOCKER_PASSWORD }}"
+            docker login ${{ env.REGISTRY }} -u "${{ env.DOCKER_USERNAME }}" -p "${{ env.DOCKER_PASSWORD }}"
 
             echo "Creating .env file for compose..."
             echo "KEYCLOAK_ADMIN=${{ env.KEYCLOAK_ADMIN }}" > .env
@@ -77,13 +77,13 @@ jobs:
             echo "KEYCLOAK_POSTGRES_PASSWORD=${{ env.KEYCLOAK_POSTGRES_PASSWORD }}" >> .env
 
             echo "Starting compose services..."
-            /home/deploy/.local/bin/podman-compose up -d postgres keycloak pulsar
+            docker compose up -d
 
             echo "Waiting for services to be healthy..."
             sleep 30
 
             echo "Compose services started"
-            podman ps
+            docker ps
 
       - name: Cleanup SSH key
         if: always()
