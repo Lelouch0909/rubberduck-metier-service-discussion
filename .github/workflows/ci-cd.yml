@@ -282,8 +282,7 @@ jobs:
             echo "ERROR: Health check failed after $MAX_RETRIES retries"
             echo "Container status:"
             podman ps -a | grep ${{ env.SERVICE_NAME }} || true
-            echo "Last 50 log lines:"
-            podman logs ${{ env.SERVICE_NAME }} --tail 50
+           
             exit 1
 
     outputs:
