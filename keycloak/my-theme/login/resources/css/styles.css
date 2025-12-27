@@ -1,0 +1,66 @@
+/* Fond de la page */
+body {
+    background-color: #1E2939; /* Votre --background */
+    font-family: 'Inter', sans-serif;
+    color: #F1F5F9;
+}
+
+/* Carte de login */
+.login-pf-page .card-pf {
+    background-color: #364153; /* Votre --card */
+    border: 1px solid #4A5565;
+    border-radius: 12px;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+    padding: 2rem;
+}
+
+/* Titre */
+h1#kc-page-title {
+    color: #ffffff;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    margin-bottom: 2rem;
+}
+
+/* Champs de saisie */
+input.form-control {
+    background-color: #1E2939 !important;
+    border: 1px solid #6A7282 !important;
+    color: #ffffff !important;
+    border-radius: 8px !important;
+    padding: 10px !important;
+    height: auto !important;
+}
+
+input.form-control:focus {
+    border-color: #FACC15 !important; /* Jaune / Marker */
+    outline: none;
+}
+
+/* Labels */
+label {
+    color: #94A3B8;
+    font-size: 0.9rem;
+}
+
+/* Boutons (Le plus important) */
+input#kc-login {
+    background-color: #FACC15 !important; /* Jaune standard ou votre oklch */
+    color: #000000 !important;
+    border: none !important;
+    border-radius: 8px !important;
+    font-weight: bold !important;
+    text-transform: uppercase;
+    transition: all 0.3s ease;
+}
+
+input#kc-login:hover {
+    background-color: #EAB308 !important; /* Jaune plus foncé */
+    transform: scale(1.02);
+}
+
+/* Liens (Mot de passe oublié, etc) */
+a, a:visited {
+    color: #FACC15 !important;
+}
