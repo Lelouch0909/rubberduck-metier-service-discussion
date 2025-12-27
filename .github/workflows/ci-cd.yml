@@ -54,8 +54,8 @@ jobs:
         run: |
           set -e
           echo "Copying docker-compose.yml and keycloak folder to VPS..."
-          scp -P ${{ env.VPS_SSH_PORT }} docker-compose.yml ${{ env.VPS_USER }}@${{ env.VPS_HOST }}:${{ env.DEPLOY_PATH }}/
-          scp -r -P ${{ env.VPS_SSH_PORT }} keycloak ${{ env.VPS_USER }}@${{ env.VPS_HOST }}:${{ env.DEPLOY_PATH }}/
+          scp -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -P ${{ env.VPS_SSH_PORT }} docker-compose.yml ${{ env.VPS_USER }}@${{ env.VPS_HOST }}:${{ env.DEPLOY_PATH }}/
+          scp -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -r -P ${{ env.VPS_SSH_PORT }} keycloak ${{ env.VPS_USER }}@${{ env.VPS_HOST }}:${{ env.DEPLOY_PATH }}/
           echo "Files copied successfully"
 
       - name: Start compose services on VPS
@@ -282,7 +282,7 @@ jobs:
             echo "ERROR: Health check failed after $MAX_RETRIES retries"
             echo "Container status:"
             podman ps -a | grep ${{ env.SERVICE_NAME }} || true
-           
+
             exit 1
 
     outputs:
