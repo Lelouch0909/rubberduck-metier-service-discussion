@@ -51,12 +51,14 @@ jobs:
           ssh -p ${{ env.VPS_SSH_PORT }} ${{ env.VPS_USER }}@${{ env.VPS_HOST }} "mkdir -p ${{ env.DEPLOY_PATH }}"
 
       - name: Copy docker-compose and keycloak folder to VPS
-        run: |
-          set -e
-          echo "Copying docker-compose.yml and keycloak folder to VPS..."
-          scp -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -P ${{ env.VPS_SSH_PORT }} docker-compose.yml ${{ env.VPS_USER }}@${{ env.VPS_HOST }}:${{ env.DEPLOY_PATH }}/
-          scp -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -r -P ${{ env.VPS_SSH_PORT }} keycloak ${{ env.VPS_USER }}@${{ env.VPS_HOST }}:${{ env.DEPLOY_PATH }}/
-          echo "Files copied successfully"
+        uses: appleboy/scp-action@v0.1.7
+        with:
+          host: ${{ env.VPS_HOST }}
+          username: ${{ env.VPS_USER }}
+          key: ${{ env.VPS_SSH_KEY }}
+          port: ${{ env.VPS_SSH_PORT }}
+          source: "docker-compose.yml,keycloak"
+          target: ${{ env.DEPLOY_PATH }}
 
       - name: Start compose services on VPS
         uses: appleboy/ssh-action@v0.1.10
